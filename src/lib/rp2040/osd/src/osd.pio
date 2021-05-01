@@ -1,0 +1,75 @@
+; Simple NTSC output to start just black and white
+
+; * Eventually need tri-state for Black, White or No-change
+; * Can use tri-state for black, white and sync levels for just "tvout" mode
+;   * potentially use side set on same pin to change direction to low-impedence
+;     for no-change
+; * Encode pixel data as 1-bit per-pixel with 0=black and 1 = white
+; 
+; 10 Mhz clock - gives 10 cyles per microsecond so multiply us valus by ten
+; side set should be second bit for tri-state
+; 
+; Can use two pins with 470 - sync, 1000 - putput, resistors
+; | sync | output |  level  |
+; |  0   |   0    |  sync   |
+; |  1   |   0    |  black/blanking |
+; |  1   |   1    |  white  |
+; |  0   |   1    |  grey |
+
+
+
+.program osd
+; .side_set 1
+
+; two bits per cycle
+; 10 .. 14 | 00 .. 47 | pixel data[ 10, 11, 01] | 10 .. 59 |
+
+
+.define public FRONT_PORCH     14  ;  1.4 us
+.define public HSYNC           47  ;  4.7 us
+.define public BACK_PORCH      59  ;  5.9 us
+.define public VISIBLE_REGION 515  ; 51.5 us
+
+
+.wrap_target
+    out pins, 8
+.wrap
+
+; .wrap_target
+;     set pins, 0 [HSYNC-1] ; horizontal sync
+;     set pins, 1 [BACK_PORCH-1] ; back porch
+  
+;     ; TODO: draw pixels instead of just delaying
+;     ;
+;     set pins, 0 [VISIBLE_REGION-1] ; pixel data
+;     ;
+;     ; end pixel data
+;     set pins, 1 [FRONT_PORCH-1] ; 1V
+; .wrap             
+
+
+% c-sdk {
+#include "hardware/clocks.h"
+
+static inline void osd_program_init(PIO pio, uint sm, uint offset, uint pin_base, uint pin_count, float freq) {
+    for(uint i=pin_base; i<pin_base+pin_count; i++) {
+        pio_gpio_init(pio, i);
+    }
+    pio_sm_set_consecutive_pindirs(pio, sm, pin_base, pin_count, true);
+
+    pio_sm_config c = osd_program_get_default_config(offset);
+    //sm_config_set_out_special(&c, true, false, -1);
+    sm_config_set_out_shift(&c, true, true, 8);
+    sm_config_set_out_pins(&c, pin_base, pin_count);
+    //sm_config_set_set_pins(&c, pin_base, pin_count);
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+
+    uint32_t clk = clock_get_hz(clk_sys);
+    float div =  (float)clk / (freq);
+
+    sm_config_set_clkdiv(&c, div);
+
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}
