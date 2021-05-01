@@ -43,11 +43,8 @@ typedef struct
 // Runtime State
 typedef struct 
 {
-    GyroConfig_t* config;
     
     GyroCalibrationState_t cal;
-    uint32_t sampleCount;
-    int state;
 
     struct
     {

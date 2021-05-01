@@ -62,8 +62,15 @@ DEF_DATA_VAR(tdv_gyro_spi_clk_rates, 0,
   "Gyro SPI clock speed for reading gyro rates",
   Tdt_u32, Tdm_RW | Tdm_config);
 
-  
+DEF_DATA_VAR(tdv_gyro_cal_samples, 8000 * 2, 
+  "gyro.calibration.samples",
+  "Number of raw gyro samples to average to calculate offests",
+  Tdt_u32, Tdm_RW | Tdm_config);
 
+DEF_DATA_VAR(tdv_gyro_cal_retries, 10, 
+  "gyro.calibration.retries",
+  "Number attempts to calculate gyro offests",
+  Tdt_u32, Tdm_RW | Tdm_config);
 
 void gyroInitVars()
 {
@@ -81,5 +88,8 @@ void gyroInitVars()
 
   telemetry_register(&tdv_gyro_sample_count);
   telemetry_register(&tdv_gyro_state);
+
+  telemetry_register(&tdv_gyro_cal_samples);
+  telemetry_register(&tdv_gyro_cal_retries);
 }
 

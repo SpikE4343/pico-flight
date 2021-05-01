@@ -21,25 +21,6 @@
 #include "telemetry.h"
 
 
-
-
-
-DEF_DATA_VAR(tdv_gyro_lpfCutoffHz, 50, 
-  "gyro.filterHz",
-  "Gyro filter cutoff in hertz",
-  Tdt_i32, Tdm_RW | Tdm_config);
-
-DEF_DATA_VAR(tdv_gyro_resolution, 50, 
-  "gyro.scale",
-  "Gyro scale",
-  Tdt_f32, Tdm_RW | Tdm_config);
-
-DEF_DATA_VAR(tdv_gyro_dataReadyInterruptPin, 50, 
-  "gyro.filterHz",
-  "Gyro filter cutoff in hertz",
-  Tdt_i32, Tdm_RW | Tdm_config);
-
-
 typedef spi_inst_t *spi_t;
 
 typedef struct 
@@ -101,7 +82,7 @@ static void __time_critical_func(dma_complete_handler)()
 
 static void __time_critical_func(gyro_data_ready_handler)(uint gpio, uint32_t events)
 {
-  if (gpio != s.gyro.config->dataReadyInterruptPin )
+  if (gpio != tdv_gyro_rdy_pin.v.u8 )
     return;
   
   gpio_acknowledge_irq(gpio, events);
@@ -260,21 +241,21 @@ void gyroWriteRegister(uint8_t reg, uint8_t data)
 
 void gyroUpdateState()
 {
-  int count = s.gyro.config->calibration.sampleCount;
+  int count = tdv_gyro_cal_samples.v.u32;
 
-  switch (s.gyro.state)
+  switch (tdv_gyro_state.v.u8)
   {
     // boot up
   case GYRO_ST_BOOT:
-    s.gyro.state = GYRO_ST_CAL_COLLECT;
-    s.gyro.sampleCount = 0;
+    tdv_gyro_state.v.u8 = GYRO_ST_CAL_COLLECT;
+    tdv_gyro_sample_count.v.u32 = 0;
     break;
 
   // calibrate gyro
   case GYRO_ST_CAL_COLLECT: 
-    if (s.gyro.sampleCount >= s.gyro.config->calibration.sampleCount)
+    if (tdv_gyro_sample_count.v.u32 >= tdv_gyro_cal_samples.v.u32)
     {
-      s.gyro.state = GYRO_ST_CAL_COMPLETE;
+      tdv_gyro_state.v.u8 = GYRO_ST_CAL_COMPLETE;
       break;
     }
 
@@ -293,18 +274,18 @@ void gyroUpdateState()
       s.gyro.cal.zeroValue.axis[a] = (int16_t)s.gyro.cal.avg.axis[a];
     }
 
-    if (!pass && s.gyro.cal.retry++ < s.gyro.config->calibration.maxRetries)
+    if (!pass && s.gyro.cal.retry++ < tdv_gyro_cal_retries.v.u32)
     {
-      s.gyro.sampleCount = 0;
+      tdv_gyro_sample_count.v.u32 = 0;
       s.gyro.cal.avg.roll = 0.0f;
       s.gyro.cal.avg.pitch = 0.0f;
       s.gyro.cal.avg.yaw = 0.0f;
-      s.gyro.state = GYRO_ST_CAL_COLLECT;
+      tdv_gyro_state.v.u8 = GYRO_ST_CAL_COLLECT;
       break;
     }
 
 
-    s.gyro.state = pass ? GYRO_ST_READY : GYRO_ST_FAIL;
+    tdv_gyro_state.v.u8 = pass ? GYRO_ST_READY : GYRO_ST_FAIL;
     break;
   }
 
@@ -330,7 +311,7 @@ void gyroUpdateState()
 
 void gyroUpdate()
 {
-  ++s.gyro.sampleCount;
+  ++tdv_gyro_sample_count.v.u32;
 
   gyroUpdateState();
 }
@@ -364,15 +345,14 @@ void gyroConfigure()
   gyroWriteRegister(MPU_RA_INT_PIN_CFG, 0 << 7 | 0 << 6 | 0 << 5 | 1 << 4 | 0 << 3 | 0 << 2 | 1 << 1 | 0 << 0); // INT_ANYRD_2CLEAR, BYPASS_EN
   gyroWriteRegister(MPU_RA_INT_ENABLE, 0x01);
 
-  spi_set_baudrate(s.spi, s.gyro.config->spi.clockSpeedGyro);
+  spi_set_baudrate(s.spi, tdv_gyro_spi_clk_rates.v.u32);
   printf("gyro configured\n");
 }
 
-void gyroInit(GyroConfig_t *info)
+void gyroInit()
 {
   memset(&s, 0, sizeof(s));
-  s.gyro.state = GYRO_ST_BOOT;
-  s.gyro.config = info;
+  tdv_gyro_state.v.u8 = GYRO_ST_BOOT;
 
   uint8_t readState[7] = {MPU_RA_GYRO_XOUT_H | 0x80, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
   memcpy(s.gyroBuffer, readState, 7);
@@ -381,12 +361,12 @@ void gyroInit(GyroConfig_t *info)
 
   s.spi = spi0;
 
-  spi_init(s.spi, s.gyro.config->spi.clockSpeedRegisters);
+  spi_init(s.spi, u32v(tdv_gyro_spi_clk_reg));
 
-  gpio_set_function(s.gyro.config->spi.inputPin, GPIO_FUNC_SPI);
-  gpio_set_function(s.gyro.config->spi.clockPin, GPIO_FUNC_SPI);
-  gpio_set_function(s.gyro.config->spi.outputPin, GPIO_FUNC_SPI);
-  gpio_set_function(s.gyro.config->spi.selectPin, GPIO_FUNC_SPI);
+  gpio_set_function(u8v(tdv_gyro_spi_pins_in), GPIO_FUNC_SPI);
+  gpio_set_function(u8v(tdv_gyro_spi_pins_clk), GPIO_FUNC_SPI);
+  gpio_set_function(u8v(tdv_gyro_spi_pins_out), GPIO_FUNC_SPI);
+  gpio_set_function(u8v(tdv_gyro_spi_pins_select), GPIO_FUNC_SPI);
 
   gyroConfigure();
   
@@ -396,7 +376,7 @@ void gyroInit(GyroConfig_t *info)
   dma_init();
 
   gpio_set_irq_enabled_with_callback(
-    s.gyro.config->dataReadyInterruptPin, 
+    u8v(tdv_gyro_rdy_pin), 
     GPIO_IRQ_EDGE_RISE, 
     true, 
     &gyro_data_ready_handler);

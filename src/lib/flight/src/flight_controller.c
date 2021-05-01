@@ -74,8 +74,8 @@ static volatile uint32_t counter1 = 0;
 
 bool flightIdleTimer(repeating_timer_t* timer)
 {
-  tdv_fc_core0_counter.value.u32 += ((int32_t)(counter0 - tdv_fc_core0_counter.value.u32)) >> 1;
-  tdv_fc_core1_counter.value.u32 += ((int32_t)(counter1 - tdv_fc_core1_counter.value.u32)) >> 1;
+  tdv_fc_core0_counter.v.u32 += ((int32_t)(counter0 - tdv_fc_core0_counter.v.u32)) >> 1;
+  tdv_fc_core1_counter.v.u32 += ((int32_t)(counter1 - tdv_fc_core1_counter.v.u32)) >> 1;
 
   counter0 = 0;
   counter1 = 0;
@@ -147,7 +147,7 @@ void flightInit(FlightControllerConfig_t *info)
 {
   sleep_ms(2000);
 
-  tdv_fc_state.value.i32 = FC_STATE_BOOT;
+  tdv_fc_state.v.i32 = FC_STATE_BOOT;
   config = info;
 
   telemetryInit(&config->telemetry);
@@ -237,9 +237,9 @@ void flightControlUpdate()
 {
   // flightProcessInputs();
   state.r.motorOutputs.disarmed = true;
-  uint32_t next = tdv_fc_state.value.u32;
+  uint32_t next = tdv_fc_state.v.u32;
 
-  switch (tdv_fc_state.value.u32)
+  switch (tdv_fc_state.v.u32)
   {
   case FC_STATE_BOOT:
     next = FC_STATE_CALIBRATE;
@@ -302,8 +302,8 @@ void flightControlUpdate()
     }
     else if (now < (state.startupMs + config->motorOutputs.startupDelayMs * 2))
     {
-      for (int m = 0; m < tdv_motor_count.value.u8; ++m)
-        tdv_fc_motor_output[m].value.f32 = 0;
+      for (int m = 0; m < tdv_motor_count.v.u8; ++m)
+        tdv_fc_motor_output[m].v.f32 = 0;
     }
     else
     {
@@ -313,17 +313,17 @@ void flightControlUpdate()
   break;
   }
 
-  if (next != tdv_fc_state.value.u32)
+  if (next != tdv_fc_state.v.u32)
   {
-    printf("state changing: %u -> %u\n", tdv_fc_state.value.u32, next);
-    tdv_fc_state.value.u32 = next;
+    printf("state changing: %u -> %u\n", tdv_fc_state.v.u32, next);
+    tdv_fc_state.v.u32 = next;
     telemetry_sample(&tdv_fc_state);
   }
 
   //motorMixerCalculateOutputs(&state.r.motorInputs, &state.r.motorOutputs);
   motorOutputSet(&state.r.motorOutputs);
 
-  ++tdv_fc_control_updates.value.u32;
+  ++tdv_fc_control_updates.v.u32;
 }
 
 #define GYRO_SCALE (1000.0f / (float)(65535.0f/2.0f))
@@ -334,25 +334,25 @@ void flightGyroUpdateTask()
   uint32_t t = timer_hw->timelr;
   GyroState_t* gyro = gyroState();
 
-  tdv_fc_rates_raw[0].value.f32 = ((float)gyro->raw_rates.axis[0]) / 32.8f; //* GYRO_SCALE;
-  tdv_fc_rates_raw[1].value.f32 = ((float)gyro->raw_rates.axis[1]) / 32.8f; //* GYRO_SCALE;
-  tdv_fc_rates_raw[2].value.f32 = ((float)gyro->raw_rates.axis[2]) / 32.8f; //* GYRO_SCALE;
+  tdv_fc_rates_raw[0].v.f32 = ((float)gyro->raw_rates.axis[0]) / 32.8f; //* GYRO_SCALE;
+  tdv_fc_rates_raw[1].v.f32 = ((float)gyro->raw_rates.axis[1]) / 32.8f; //* GYRO_SCALE;
+  tdv_fc_rates_raw[2].v.f32 = ((float)gyro->raw_rates.axis[2]) / 32.8f; //* GYRO_SCALE;
   
   // TODO: explore using hardware interp in blend mode as a low pass filter
 
-  tdv_fc_rates_filtered[0].value.f32 = lowPassFilter(tdv_fc_rates_filtered[0].value.f32, tdv_fc_rates_raw[0].value.f32, state.lpfAlpha);
-  tdv_fc_rates_filtered[1].value.f32 = lowPassFilter(tdv_fc_rates_filtered[1].value.f32, tdv_fc_rates_raw[1].value.f32, state.lpfAlpha);
-  tdv_fc_rates_filtered[2].value.f32 = lowPassFilter(tdv_fc_rates_filtered[2].value.f32, tdv_fc_rates_raw[2].value.f32, state.lpfAlpha);
+  tdv_fc_rates_filtered[0].v.f32 = lowPassFilter(tdv_fc_rates_filtered[0].v.f32, tdv_fc_rates_raw[0].v.f32, state.lpfAlpha);
+  tdv_fc_rates_filtered[1].v.f32 = lowPassFilter(tdv_fc_rates_filtered[1].v.f32, tdv_fc_rates_raw[1].v.f32, state.lpfAlpha);
+  tdv_fc_rates_filtered[2].v.f32 = lowPassFilter(tdv_fc_rates_filtered[2].v.f32, tdv_fc_rates_raw[2].v.f32, state.lpfAlpha);
 
-  ++tdv_fc_gyro_updates.value.u32;
+  ++tdv_fc_gyro_updates.v.u32;
 
-  if(tdv_fc_gyro_updates.value.u32 % state.gyroTicksPerControl == 0 )
+  if(tdv_fc_gyro_updates.v.u32 % state.gyroTicksPerControl == 0 )
   {
     flightControlUpdate();
   }
 
   int32_t dt = timer_hw->timelr - t;
-  tdv_fc_gyro_update_us.value.u32 += ((int32_t)(dt - tdv_fc_gyro_update_us.value.u32)) >> 1;
+  tdv_fc_gyro_update_us.v.u32 += ((int32_t)(dt - tdv_fc_gyro_update_us.v.u32)) >> 1;
   //return true;
 }
 
@@ -376,7 +376,7 @@ void flightPrintTask()
   telemetry_sample_array(tdv_fc_rates_raw, 3);
   telemetry_sample_array(tdv_fc_rates_filtered, 3);
 
-  telemetry_sample_array(tdv_fc_motor_output, tdv_motor_count.value.u8);
+  telemetry_sample_array(tdv_fc_motor_output, tdv_motor_count.v.u8);
 
   telemetry_sample(&tdv_fc_gyro_updates);
   telemetry_sample(&tdv_fc_state);
@@ -387,8 +387,8 @@ void flightPrintTask()
 
   telemetry_sample(&tdv_fc_gyro_update_us);
 
-  tdv_fc_core0_counter.value.u32 = 0;
-  tdv_fc_core1_counter.value.u32 = 0;
+  tdv_fc_core0_counter.v.u32 = 0;
+  tdv_fc_core1_counter.v.u32 = 0;
 
   
   telemetry_send(state.startupMs, time);

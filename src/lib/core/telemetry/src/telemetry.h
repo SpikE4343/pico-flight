@@ -96,7 +96,7 @@ typedef struct {
 
 typedef struct {
   uint32_t id;
-  TValue_t value;
+  TValue_t v;
   TDataValueDesc_t meta;
 } TDataVar_t;
 
@@ -155,14 +155,14 @@ TDataValueDesc_t *telemetry_get_desc(uint32_t id);
 #define END_DEF_DV_ARRAY() };
 
 #define DV_ARRAY_COUNT(var) (sizeof(var)/sizeof(TDataVar_t))
-#define f32v(var) var.value.f32
-#define u32v(var) var.value.u32
-#define i32v(var) var.value.i32
-#define u16v(var) var.value.u16
-#define i16v(var) var.value.i16
-#define u8v(var) var.value.u8
-#define i8v(var) var.value.i8
-#define char8v(var) var.value.c8
-#define bool8v(var) var.value.b8
+#define f32v(var) var.v.f32
+#define u32v(var) var.v.u32
+#define i32v(var) var.v.i32
+#define u16v(var) var.v.u16
+#define i16v(var) var.v.i16
+#define u8v(var) var.v.u8
+#define i8v(var) var.v.i8
+#define char8v(var) var.v.c8
+#define bool8v(var) var.v.b8
 
 #endif

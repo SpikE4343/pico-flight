@@ -26,7 +26,7 @@ int motorHasValue(float val)
 }
 
 
-void motorMixerCalculateOutputs(float *input, float *output)
+void motorMixerCalculateOutputs(TDataVar_t *input, TDataVar_t *output)
 {
   int m = 0, c = 0;
   MotorMixConfig_t *mmix = NULL;
