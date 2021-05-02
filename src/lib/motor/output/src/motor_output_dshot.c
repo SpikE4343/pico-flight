@@ -28,3 +28,9 @@ DshotPacket_t dshotBuildPacket(uint16_t throttle)
   packet.crc = dshotPacketCrc(packet);
   return packet;
 }
+
+DEF_DATA_VAR(tdv_motor_output_rate, MOTOR_DSHOT600, 
+  "motor.output.rate",
+  "Dshot output data rate",
+  Tdt_u32, Tdm_RW | Tdm_config);
+

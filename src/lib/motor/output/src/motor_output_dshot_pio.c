@@ -16,7 +16,6 @@
 
 typedef struct
 {
-  MotorOutputConfig_t *config;
   uint8_t dmaId;
 } MotorOutputState_t;
 
@@ -83,10 +82,11 @@ static void dma_init(PIO pio, uint sm)
       false);
 }
 
-void motorOutputInit(MotorOutputConfig_t *info)
+void motorOutputInit()
 {
-  s.config = info;
+  
   printf("motor init begin\n");
+
 
   memset(dshotPackets, 0, sizeof(dshotPackets));
   memset(dshotPacketBitPlanes, 0, sizeof(dshotPacketBitPlanes));
@@ -95,19 +95,25 @@ void motorOutputInit(MotorOutputConfig_t *info)
   int sm = 0;
   uint offset = pio_add_program(pio, &dshot_parallel_program);
 
-  dshot_parallel_program_init(pio, sm, offset, info->motor[0].pin, MAX_MOTORS, info->dshotFreq * 1000);
+  dshot_parallel_program_init(pio, sm, offset, tdv_motor_output_pin[0].v.u8, MAX_MOTORS, tdv_motor_output_rate.v.u32 * 1000);
 
   dma_init(pio, sm);
   printf("motor init end\n");
 }
 
-void motorOutputSet(MotorOutputs_t *output)
+void motorOutputSet(TDataVar_t *output)
 {
   //printf("motor output set, %u\n", DSHOT_PACKET_SIZE_BITS);
 
+  uint16_t idle = (uint16_t)(tdv_motor_output_idle.v.f32*MOTOR_MAX_OUTPUT);
+
   for (int m = 0; m < MAX_MOTORS; ++m)
   {
-    uint16_t motorValue = math_clamp(MOTOR_MIN_OUTPUT, (uint16_t)(s.config->idle + fixed_to_float(output->motor[m]) * MOTOR_MAX_OUTPUT), MOTOR_MAX_OUTPUT);
+    uint16_t motorValue = math_clamp(
+      MOTOR_MIN_OUTPUT, 
+      (uint16_t)( idle + output[m].v.f32 * MOTOR_MAX_OUTPUT),
+      MOTOR_MAX_OUTPUT
+    );
 
     dshotPackets[m] = dshotBuildPacket(motorValue); // & ~output->disarmed);
 

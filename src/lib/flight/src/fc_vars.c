@@ -57,54 +57,50 @@ DEF_DATA_VAR(tdv_fc_armed, false,
   "True when craft motors are active, false otherwise",
   Tdt_bool, Tdm_RW);
 
+DEF_DATA_VAR(tdv_fc_update_rate_hz, 4000, 
+  "fc.update_rate",
+  "True when craft motors are active, false otherwise",
+  Tdt_u32, Tdm_RW | Tdm_config);
 
-DEF_DATA_VAR(tdv_motor_count, 4, 
-  "motor.count",
-  "Number of active motors",
-  Tdt_u8, Tdm_RW | Tdm_config);
-
-BEGIN_DEF_DV_ARRAY( tdv_fc_motor_output )
-  DEF_DV_ARRAY_ITEM(0, 0.0f, "fc.motor.output", "Normalized motor throttle value sent to mixer", Tdt_f32, Tdm_RW)
-  DEF_DV_ARRAY_ITEM(1, 0.0f, "fc.motor.output", "Normalized motor throttle value sent to mixer", Tdt_f32, Tdm_RW)
-  DEF_DV_ARRAY_ITEM(2, 0.0f, "fc.motor.output", "Normalized motor throttle value sent to mixer", Tdt_f32, Tdm_RW)
-  DEF_DV_ARRAY_ITEM(3, 0.0f, "fc.motor.output", "Normalized motor throttle value sent to mixer", Tdt_f32, Tdm_RW)
-END_DEF_DV_ARRAY()
-
+DEF_DATA_VAR(tdv_fc_telemetry_rate_hz, 60, 
+  "fc.telemetry.rate",
+  "Rate, in hertz, to send telemetry samples",
+  Tdt_u32, Tdm_RW | Tdm_config);
 
 BEGIN_DEF_DV_ARRAY( tdv_fc_rates_raw )
   DEF_DV_ARRAY_ITEM("roll", 0.0f,
     "fc.gyro.raw",
     "Flight Controller copy of raw gyro roll data",
-    Tdt_f32, Tdm_RW)
+    Tdt_f32, Tdm_RW),
 
   DEF_DV_ARRAY_ITEM("pitch", 0.0f, 
     "fc.gyro.raw", 
     "Flight Controller copy of raw gyro pitch data", 
-    Tdt_f32, Tdm_RW)
+    Tdt_f32, Tdm_RW),
 
   DEF_DV_ARRAY_ITEM("yaw", 0.0f, 
     "fc.gyro.raw",
     "Flight Controller copy of raw gyro yaw data",
     Tdt_f32, Tdm_RW)
-END_DEF_DV_ARRAY()
+END_DEF_DV_ARRAY();
 
 
 BEGIN_DEF_DV_ARRAY( tdv_fc_rates_filtered )
   DEF_DV_ARRAY_ITEM("roll", 0.0f,
     "fc.gyro.filtered",
     "Flight Controller copy of filtered gyro roll data",
-    Tdt_f32, Tdm_RW)
+    Tdt_f32, Tdm_RW),
 
   DEF_DV_ARRAY_ITEM("pitch", 0.0f, 
     "fc.gyro.filtered", 
     "Flight Controller copy of filtered gyro pitch data", 
-    Tdt_f32, Tdm_RW)
+    Tdt_f32, Tdm_RW),
 
   DEF_DV_ARRAY_ITEM("yaw", 0.0f, 
     "fc.gyro.filtered",
     "Flight Controller copy of filtered gyro yaw data",
     Tdt_f32, Tdm_RW)
-END_DEF_DV_ARRAY()
+END_DEF_DV_ARRAY();
 
 void flightInitVars()
 {
@@ -120,8 +116,10 @@ void flightInitVars()
   telemetry_register(&tdv_fc_armed);  
   telemetry_register(&tdv_motor_count);    
 
+  telemetry_register(&tdv_fc_update_rate_hz);
+  telemetry_register(&tdv_fc_telemetry_rate_hz);
+
   telemetry_register_array(tdv_fc_rates_raw, sizeof(tdv_fc_rates_raw)/sizeof(TDataVar_t));
   telemetry_register_array(tdv_fc_rates_filtered, sizeof(tdv_fc_rates_filtered)/sizeof(TDataVar_t));
-  telemetry_register_array(tdv_fc_motor_output, sizeof(tdv_fc_motor_output)/sizeof(TDataVar_t));
 }
 

@@ -27,9 +27,7 @@
 
 typedef struct
 {
-  InputRxConfig_t *config;
   uint32_t validFrames;
-  ControlState_t controls;
   uint32_t readTime;
   uint32_t uniqueID;
   uart_inst_t *uart;
@@ -48,7 +46,6 @@ typedef struct
     volatile uint16_t read;
     volatile uint16_t write;
     volatile uint16_t length;
-    uint8_t state;
   } rx;
 } InputRxState_t;
 
@@ -72,12 +69,6 @@ void userProvidedHandleVtxData(SrxlVtxData *pVtxData);
 #define STOP_BITS 1
 #define PARITY UART_PARITY_NONE
 
-#define UART_TX_PIN 0
-#define UART_RX_PIN 1
-
-#define DMA_CHANNEL 1
-// chain channel for configuring main dma channel to output from disjoint 8 word fragments of memory
-#define DMA_CHANNEL_MASK (1u << DMA_CHANNEL)
 
 static inline bool buffer_empty()
 {
@@ -129,20 +120,22 @@ void on_uart_rx()
   }
 }
 
-void inputRxInit(InputRxConfig_t *_config)
+void inputRxInit()
 {
   memset(&s, 0, sizeof(s));
-  s.config = _config;
   s.uniqueID = rand();
-  s.uart = s.config->uart ? uart1 : uart0;
+  s.uart = tdv_rc_uart_id.v.u8 ? uart1 : uart0;
   s.rx.read = s.rx.write = 0;
   memset(s.rx.buffer, 0, sizeof(s.rx.buffer));
-  s.rx.state = RX_RESET;
+  
+  ioRCInitVars();
+
+  tdv_rc_recv_state.v.u8 = RX_RESET;
 
   uart_init(s.uart, 2400);
 
-  gpio_set_function(s.config->txPin, GPIO_FUNC_UART);
-  gpio_set_function(s.config->rxPin, GPIO_FUNC_UART);
+  gpio_set_function(tdv_rc_uart_pins_tx.v.u8, GPIO_FUNC_UART);
+  gpio_set_function(tdv_rc_uart_pins_tx.v.u8, GPIO_FUNC_UART);
 
   int actual = uart_set_baudrate(s.uart, BAUD_RATE);
   assert(actual == BAUD_RATE);
@@ -189,16 +182,6 @@ void inputRxInit(InputRxConfig_t *_config)
     return;
 }
 
-fixed_t inputGetControlValue(uint8_t control)
-{
-  return s.controls.values[control];
-}
-
-ControlState_t *inputGetControlState()
-{
-  return &s.controls;
-}
-
 int readData(int max)
 {
   int read = 0;
@@ -233,11 +216,11 @@ void inputRxUpdate()
 
   while (!buffer_empty())
   {
-    switch (s.rx.state)
+    switch (tdv_rc_recv_state.v.u8)
     {
     case RX_RESET:
       s.rx.packetLen = 0;
-      s.rx.state = RX_FIND_MARKER;
+      tdv_rc_recv_state.v.u8 = RX_FIND_MARKER;
       break;
 
     case RX_FIND_MARKER:
@@ -259,13 +242,13 @@ void inputRxUpdate()
       if (data == SPEKTRUM_SRXL_ID)
       {
         s.rx.packet[s.rx.packetLen++] = data;
-        s.rx.state = RX_LOOP_MARKER;
+        tdv_rc_recv_state.v.u8 = RX_LOOP_MARKER;
         break;
       }
-      else if (s.rx.state == RX_LOOP_MARKER)
+      else if (tdv_rc_recv_state.v.u8 == RX_LOOP_MARKER)
       {
         s.rx.packet[s.rx.packetLen++] = data;
-        s.rx.state = RX_READ_HEADER;
+        tdv_rc_recv_state.v.u8 = RX_READ_HEADER;
       }
       else
       {
@@ -292,7 +275,7 @@ void inputRxUpdate()
       //        data);
 
       s.rx.packet[s.rx.packetLen++] = data;
-      s.rx.state = RX_READ_DATA;
+      tdv_rc_recv_state.v.u8 = RX_READ_DATA;
 
       // print_packet();
     }
@@ -319,7 +302,7 @@ void inputRxUpdate()
       if(!valid)
         print_packet();
 
-      s.rx.state = RX_RESET;
+      tdv_rc_recv_state.v.u8 = RX_RESET;
     }
     break;
     }
@@ -379,25 +362,13 @@ void userProvidedReceivedChannelData(SrxlChannelData *pChannelData, bool isFails
   // if(srxlChData.rssi < -85 || (srxlChData.rssi > 0 && srxlChData.rssi < 10))
   //     EnterLongRangeModeForExample();
 
-  // for (int i = 0; i < sizeof(srxlChData.values) >> 1; ++i)
-  // {
-  //   printf("channel[%u]=%d\n", srxlChData.values[i]);
-  // }
+  for (int i = 0; i < sizeof(srxlChData.values) >> 1; ++i)
+  {
+     tdv_rc_input[i].v.f32 = (srxlChData.values[i] - 32767) / 32767.0f;
+  }
 
-  printf("channel: rssi: %d, fl: %u, fs:%u\n", srxlChData.rssi, srxlChData.frameLosses, isFailsafeData);
-
-  s.controls.values[0].value = (((int32_t)srxlChData.values[0]) - 32767) << 14;
-  s.controls.values[1].value = (((int32_t)srxlChData.values[1]) - 32767) << 14;
-  s.controls.values[2].value = (((int32_t)srxlChData.values[2]) - 32767) << 14;
-  s.controls.values[3].value = (((int32_t)srxlChData.values[3]) - 32767) << 14;
-  s.controls.values[4].value = (((int32_t)srxlChData.values[4]) - 32767) << 14;
-
-  printf("i: [%f, %f, %f, %f, %f\n",
-    fixed_to_float(s.controls.values[0]),
-    fixed_to_float(s.controls.values[1]),
-    fixed_to_float(s.controls.values[2]),
-    fixed_to_float(s.controls.values[3]),
-    fixed_to_float(s.controls.values[4]));
+  tdv_rc_failsafe.v.b8 = isFailsafeData;
+  tdv_rc_rssi.v.i8 = srxlChData.rssi;
 }
 
 void userProvidedHandleVtxData(SrxlVtxData *pVtxData)

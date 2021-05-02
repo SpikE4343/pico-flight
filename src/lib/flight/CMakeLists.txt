@@ -13,8 +13,9 @@ target_include_directories(flight INTERFACE
 target_link_libraries(flight INTERFACE
     pico_multicore
     core-math
-    motormixer
-    motoroutput
+    motor-common
+    motor-mixer
+    motor-output
     io_rc
     gyro
     rp2040_osd)

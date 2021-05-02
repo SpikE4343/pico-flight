@@ -9,6 +9,7 @@
 #include <sys/time.h>
 
 #include "gyro_spi_mpu9250.h"
+#include "motor_common.h"
 #include "motor_mixer.h"
 #include "motor_output.h"
 #include "telemetry.h"
@@ -35,12 +36,10 @@
 typedef struct
 {
   float lpfAlpha;
-  FlightControllerRuntimeState_t r;
   uint64_t startupMs;
   uint32_t gyroTicksPerControl;
 } FlightControllerState_t;
 
-static FlightControllerConfig_t *config;
 static FlightControllerState_t state;
 //static WebSocketDataHandler_t infoHandler;
 
@@ -91,7 +90,7 @@ void flightCore0()
   }
 
   // negative timeout means exact delay (rather than delay between callbacks)
-  if (!add_repeating_timer_us(-1000000.0 / config->updateIntervals.print, flightUpdate, NULL, &timer))
+  if (!add_repeating_timer_us(-1000000.0 / tdv_fc_telemetry_rate_hz.v.u32, flightUpdate, NULL, &timer))
   {
     printf("Failed to add timer\n");
     return;
@@ -116,22 +115,23 @@ void flightCore0()
 
 void flightCore1()
 {
-  state.gyroTicksPerControl = (uint32_t)(config->updateIntervals.gyro / config->updateIntervals.control);
+  state.gyroTicksPerControl = (uint32_t)(tdv_gyro_sample_rate_hz.v.u32 / tdv_fc_update_rate_hz.v.u32);
 
-  motorMixerInit(&config->mixer);
-  motorOutputInit(&config->motorOutputs);
-  flightAttitudePIDInit(&config->attitude);
-  gyroInit(&config->gyro);
+  motorCommonInit();
+  motorMixerInit();
+  motorOutputInit();
+  //flightAttitudePIDInit(&config->attitude);
+  gyroInit();
 
   state.lpfAlpha = lpfAlpha(
-      config->gyro.lpfCutoffHz,
-      1.0f / config->updateIntervals.gyro);
+      tdv_gyro_filter_hz.v.u32,
+      1.0f / tdv_gyro_sample_rate_hz.v.u32);
 
-  printf("gyro delay: %f\n", (float)config->updateIntervals.gyro);
-  printf("gyro lpfAlpha: %f\n", state.lpfAlpha);
-  printf("gyro scale: %f\n", config->gyro.scale);
-  printf("control delay: %f, gyro ticks: %u\n", (float)config->updateIntervals.control, state.gyroTicksPerControl);
-  printf("print delay: %f\n", (float)config->updateIntervals.print);
+  // printf("gyro delay: %f\n", (float)config->updateIntervals.gyro);
+  // printf("gyro lpfAlpha: %f\n", state.lpfAlpha);
+  // printf("gyro scale: %f\n", config->gyro.scale);
+  // printf("control delay: %f, gyro ticks: %u\n", (float)config->updateIntervals.control, state.gyroTicksPerControl);
+  // printf("print delay: %f\n", (float)config->updateIntervals.print);
 
   gyroSetUpdateCallback(flightGyroUpdateTask);
 
@@ -143,24 +143,25 @@ void flightCore1()
   }
 }
 
-void flightInit(FlightControllerConfig_t *info)
+void flightInit()
 {
   sleep_ms(2000);
 
-  tdv_fc_state.v.i32 = FC_STATE_BOOT;
-  config = info;
+  flightInitVars();
 
-  telemetryInit(&config->telemetry);
+  tdv_fc_state.v.i32 = FC_STATE_BOOT;
+
+  telemetryInit();
 
   multicore_launch_core1(flightCore1);
 
   // wait for control loop core init to complete
   int core1_init = multicore_fifo_pop_blocking();
 
-  inputRxInit(&config->input);
-  osdInit(&config->osd);
+  inputRxInit();
+  osdInit();
 
-  flightInitVars();
+  
 
   state.startupMs = get_time();
 
@@ -183,26 +184,26 @@ static inline float constrainf(float amt, float low, float high)
 
 float applyBetaflightRates(const int axis, float rcCommandf, const float rcCommandfAbs)
 {
-  ControlRates_t *rates = &config->control.rates[axis];
+  // ControlRates_t *rates = &config->control.rates[axis];
 
-  if (rates->expo)
-  {
-    const float expof = rates->expo / 100.0f;
-    rcCommandf = rcCommandf * (rcCommandfAbs * rcCommandfAbs * rcCommandfAbs) * expof + rcCommandf * (1 - expof);
-  }
+  // if (rates->expo)
+  // {
+  //   const float expof = rates->expo / 100.0f;
+  //   rcCommandf = rcCommandf * (rcCommandfAbs * rcCommandfAbs * rcCommandfAbs) * expof + rcCommandf * (1 - expof);
+  // }
 
-  float rcRate = rates->rc / 100.0f;
-  if (rcRate > 2.0f)
-    rcRate += RC_RATE_INCREMENTAL * (rcRate - 2.0f);
+  // float rcRate = rates->rc / 100.0f;
+  // if (rcRate > 2.0f)
+  //   rcRate += RC_RATE_INCREMENTAL * (rcRate - 2.0f);
 
-  float angleRate = 200.0f * rcRate * rcCommandf;
-  if (rates->super)
-  {
-    const float rcSuperfactor = 1.0f / (constrainf(1.0f - (rcCommandfAbs * (rates->super / 100.0f)), 0.01f, 1.00f));
-    angleRate *= rcSuperfactor;
-  }
+  // float angleRate = 200.0f * rcRate * rcCommandf;
+  // if (rates->super)
+  // {
+  //   const float rcSuperfactor = 1.0f / (constrainf(1.0f - (rcCommandfAbs * (rates->super / 100.0f)), 0.01f, 1.00f));
+  //   angleRate *= rcSuperfactor;
+  // }
 
-  return angleRate;
+  // return angleRate;
 }
 
 // TODO: need way to fake control inputs...
@@ -210,33 +211,33 @@ void flightProcessInputs()
 {
   inputRxUpdate();
 
-  ControlState_t *control = inputGetControlState();
-  memcpy(&(state.r.controlInputs), control, sizeof(ControlState_t));
+  // ControlState_t *control = inputGetControlState();
+  // memcpy(&(state.r.controlInputs), control, sizeof(ControlState_t));
 
-  state.r.controlInputs.failsafe = false;
-  state.r.controlInputs.signalLost = false;
-  for (int a = 0; a < NUM_AXIS_CONTROLS; ++a)
-  {
-    //float value = state.r.controlInputs.values[a];
-    state.r.controllerInputs[a] = state.r.controlInputs.values[a]; //applyBetaflightRates(a, value, fabsf(value));
-  }
+  // state.r.controlInputs.failsafe = false;
+  // state.r.controlInputs.signalLost = false;
+  // for (int a = 0; a < NUM_AXIS_CONTROLS; ++a)
+  // {
+  //   //float value = state.r.controlInputs.values[a];
+  //   state.r.controllerInputs[a] = state.r.controlInputs.values[a]; //applyBetaflightRates(a, value, fabsf(value));
+  // }
 
-  // printf("[% 1.3f, % 1.3f, % 1.3f, % 1.3f, % 1.3f, %u]\n",
-  //        state.r.controlInputs.values[INPUT_CONTROL_PITCH],
-  //        state.r.controlInputs.values[INPUT_CONTROL_ROLL],
-  //        state.r.controlInputs.values[INPUT_CONTROL_YAW],
-  //        state.r.controlInputs.values[INPUT_CONTROL_TROTTLE],
-  //        state.r.controlInputs.values[INPUT_CONTROL_ARM],
-  //        state.r.state);
+  // // printf("[% 1.3f, % 1.3f, % 1.3f, % 1.3f, % 1.3f, %u]\n",
+  // //        state.r.controlInputs.values[INPUT_CONTROL_PITCH],
+  // //        state.r.controlInputs.values[INPUT_CONTROL_ROLL],
+  // //        state.r.controlInputs.values[INPUT_CONTROL_YAW],
+  // //        state.r.controlInputs.values[INPUT_CONTROL_TROTTLE],
+  // //        state.r.controlInputs.values[INPUT_CONTROL_ARM],
+  // //        state.r.state);
 
-  // state.r.controllerInputs.throttle = state.r.controlInputs.values[3];
-  bool8v(tdv_fc_in_armed) = control->values[INPUT_CONTROL_ARM].value > fixed_from_float(0.5f).value;
+  // // state.r.controllerInputs.throttle = state.r.controlInputs.values[3];
+  // bool8v(tdv_fc_armed) = control->values[INPUT_CONTROL_ARM].value > fixed_from_float(0.5f).value;
 }
 
 void flightControlUpdate()
 {
   // flightProcessInputs();
-  state.r.motorOutputs.disarmed = true;
+  //state.r.motorOutputs.disarmed = true;
   uint32_t next = tdv_fc_state.v.u32;
 
   switch (tdv_fc_state.v.u32)
@@ -255,19 +256,19 @@ void flightControlUpdate()
 
   case FC_STATE_ARMED:
 
-    if (state.r.controlInputs.failsafe || state.r.controlInputs.signalLost)
+    if (tdv_rc_failsafe.v.b8 || tdv_rc_signal_lost.v.b8)
     {
       next = FC_STATE_FAILSAFE;
       break;
     }
 
-    if (!tdv_fc_in_armed.value.b8)
+    if (!tdv_fc_armed.v.b8)
     {
       next = FC_STATE_DISARMED;
       break;
     }
 
-    state.r.motorOutputs.disarmed = false;
+    //state.r.motorOutputs.disarmed = false;
 
     //state.r.motorInputs = state.r.controllerInputs;
 
@@ -278,14 +279,14 @@ void flightControlUpdate()
     break;
 
   case FC_STATE_FAILSAFE:
-    if (!bool8v(tdv_fc_in_armed) && !bool8v(tdv_fc_in_failsafe) && !bool8v(tdv_fc_in_signalLost))
+    if (!bool8v(tdv_fc_armed) && !bool8v(tdv_rc_failsafe) && !bool8v(tdv_rc_signal_lost))
     {
       next = FC_STATE_DISARMED;
     }
     break;
 
   case FC_STATE_DISARMED:
-    if (bool8v(tdv_fc_in_armed) && !bool8v(tdv_fc_in_failsafe) && !bool8v(tdv_fc_in_signalLost))
+    if (bool8v(tdv_fc_armed) && !bool8v(tdv_rc_failsafe) && !bool8v(tdv_rc_signal_lost))
     {
       next = FC_STATE_ARMED;
       break;
@@ -296,14 +297,14 @@ void flightControlUpdate()
   {
     uint64_t now = (uint64_t)get_time();
 
-    if (now < (state.startupMs + (uint64_t)config->motorOutputs.startupDelayMs))
+    if (now < (state.startupMs + (uint64_t)tdv_motor_startup_delay_ms.v.u32))
     {
       //++state.controlUpdates;
     }
-    else if (now < (state.startupMs + config->motorOutputs.startupDelayMs * 2))
+    else if (now < (state.startupMs + tdv_motor_startup_delay_ms.v.u32 * 2))
     {
       for (int m = 0; m < tdv_motor_count.v.u8; ++m)
-        tdv_fc_motor_output[m].v.f32 = 0;
+        tdv_motor_output[m].v.f32 = 0;
     }
     else
     {
@@ -320,8 +321,8 @@ void flightControlUpdate()
     telemetry_sample(&tdv_fc_state);
   }
 
-  //motorMixerCalculateOutputs(&state.r.motorInputs, &state.r.motorOutputs);
-  motorOutputSet(&state.r.motorOutputs);
+  // motorMixerCalculateOutputs(&state.r.motorInputs, tdv_motor_output);
+   motorOutputSet(tdv_motor_output);
 
   ++tdv_fc_control_updates.v.u32;
 }
@@ -376,7 +377,7 @@ void flightPrintTask()
   telemetry_sample_array(tdv_fc_rates_raw, 3);
   telemetry_sample_array(tdv_fc_rates_filtered, 3);
 
-  telemetry_sample_array(tdv_fc_motor_output, tdv_motor_count.v.u8);
+  telemetry_sample_array(tdv_motor_output, tdv_motor_count.v.u8);
 
   telemetry_sample(&tdv_fc_gyro_updates);
   telemetry_sample(&tdv_fc_state);

@@ -127,7 +127,7 @@ typedef struct {
   int valueModBufferCount;
 } TelemetryConfig_t;
 
-void telemetryInit(TelemetryConfig_t* info);
+void telemetryInit();
 void telemetry_send(uint64_t start, uint64_t now);
 void telemetry_recv(uint8_t byte);
 
@@ -141,20 +141,22 @@ void telemetry_sample_array(TDataVar_t* dataVar, int count);
 TValue_t telemetry_get(uint32_t id);
 TDataValueDesc_t *telemetry_get_desc(uint32_t id);
 
-#define DECL_EXTERN_DATA_VAR(var_name) extern TDataVar_t var_name;
-#define DECL_EXTERN_DV_ARRAY(var_name) extern TDataVar_t var_name[];
+#define DECL_EXTERN_DATA_VAR(var_name) extern TDataVar_t var_name
+#define DECL_EXTERN_DV_ARRAY(var_name) extern TDataVar_t var_name[]
 
-#define DEF_DATA_VAR(var_name, default_value, meta_name, meta_desc, meta_type, meta_mods) TDataVar_t var_name = { .id = 0, .meta = {.name = meta_name, .desc=meta_desc, .type=meta_type, .modsAllowed=meta_mods}, .value = {default_value} };
-#define DEF_STATIC_DATA_VAR(var_name, default_value, meta_name, meta_desc, meta_type, meta_mods) static DEF_DATA_VAR(var_name, default_value, meta_name, meta_desc, meta_type, meta_mods);
+#define DEF_DATA_VAR(var_name, default_value, meta_name, meta_desc, meta_type, meta_mods) TDataVar_t var_name = { .id = 0, .meta = {.name = meta_name, .desc=meta_desc, .type=meta_type, .modsAllowed=meta_mods}, .v = {default_value} }
+#define DEF_STATIC_DATA_VAR(var_name, default_value, meta_name, meta_desc, meta_type, meta_mods) static DEF_DATA_VAR(var_name, default_value, meta_name, meta_desc, meta_type, meta_mods)
 
 #define BEGIN_DEF_DV_ARRAY(var_name) TDataVar_t var_name[] = { 
 #define BEGIN_STATIC_DEF_DV_ARRAY(var_name) static BEGIN_DEF_DV_ARRAY(var_name)
 
-#define DEF_DV_ARRAY_ITEM(meta_index, default_value, meta_name, meta_desc, meta_type, meta_mods) { .id = 0, .meta = {.name = meta_name "." #meta_index, .desc=meta_desc, .type=meta_type, .modsAllowed=meta_mods}, .value = {default_value} },
+#define BEGIN_DEF_DV_ARRAY_2D(var_name) TDataVar_t var_name[][] = {
 
-#define END_DEF_DV_ARRAY() };
+#define DEF_DV_ARRAY_ITEM(meta_index, default_value, meta_name, meta_desc, meta_type, meta_mods) { .id = 0, .meta = {.name = meta_name "." #meta_index, .desc=meta_desc, .type=meta_type, .modsAllowed=meta_mods}, .v = {default_value} }
+#define DEF_DV_ARRAY_ITEM_NAMED(default_value, meta_name, meta_desc, meta_type, meta_mods) { .id = 0, .meta = {.name = meta_name, .desc=meta_desc, .type=meta_type, .modsAllowed=meta_mods}, .v = {default_value} }
 
-#define DV_ARRAY_COUNT(var) (sizeof(var)/sizeof(TDataVar_t))
+#define END_DEF_DV_ARRAY() }
+
 #define f32v(var) var.v.f32
 #define u32v(var) var.v.u32
 #define i32v(var) var.v.i32
@@ -164,5 +166,9 @@ TDataValueDesc_t *telemetry_get_desc(uint32_t id);
 #define i8v(var) var.v.i8
 #define char8v(var) var.v.c8
 #define bool8v(var) var.v.b8
+
+
+DECL_EXTERN_DATA_VAR(tdv_telemetry_sample_buffer_count);
+DECL_EXTERN_DATA_VAR(tdv_telemetry_val_count);
 
 #endif

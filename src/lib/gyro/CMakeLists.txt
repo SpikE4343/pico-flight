@@ -1,8 +1,8 @@
 add_library(gyro INTERFACE)
 
 target_sources(gyro INTERFACE
-        ${CMAKE_CURRENT_LIST_DIR}/src/gyro_spi_mpu9250.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/gyro_vars.c
+  ${CMAKE_CURRENT_LIST_DIR}/src/gyro_vars.c      
+  ${CMAKE_CURRENT_LIST_DIR}/src/gyro_spi_mpu9250.c      
 )
 
 target_include_directories(gyro INTERFACE 

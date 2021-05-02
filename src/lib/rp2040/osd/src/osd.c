@@ -19,6 +19,18 @@
 
 #include "font8x8_basic.h"
 
+DEF_DATA_VAR(tdv_osd_pin_sync, 14, 
+  "osd.pin.sync",
+  "Gpio pin for NTSC video sync bit",
+  Tdt_u8, Tdm_RW | Tdm_config);
+
+DEF_DATA_VAR(tdv_osd_pin_out, 15, 
+  "osd.pin.output",
+  "Gpio pin for NTSC video signal ouput bit",
+  Tdt_u8, Tdm_RW | Tdm_config);
+
+
+
 #define LINE_SIZE (635) //(640)
 #define LINE_COUNT 263
 #define FRAME_VSYNC_LINES 20
@@ -52,7 +64,6 @@
 
 typedef struct
 {
-  OsdConfig_t *config;
   uint32_t fbSize;
   uint8_t dmaId;
   uint8_t dmaMask;
@@ -339,10 +350,12 @@ void __time_critical_func(osdDrawString2)(int x, int y, char* str)
   }
 }
 
-void osdInit(OsdConfig_t *info)
+void osdInit()
 {
-  s.config = info;
   printf("osd init begin\n");
+
+  telemetry_register(&tdv_osd_pin_sync);
+  telemetry_register(&tdv_osd_pin_out);
 
   s.fbSize = LINE_COUNT * LINE_SIZE;
   s.frameBuffer = malloc(s.fbSize);
@@ -386,11 +399,11 @@ void osdInit(OsdConfig_t *info)
   //gpio_set_pulls(info->out, false, true);
 
   
-  osd_program_init(pio, sm, offset, info->sync, 2, 10000000);
+  osd_program_init(pio, sm, offset, tdv_osd_pin_sync.v.u8, 2, 10000000);
 
 
-  gpio_set_slewfast(info->sync, true);
-  gpio_set_slewfast(info->out, true);
+  gpio_set_slewfast(tdv_osd_pin_sync.v.u8, true);
+  gpio_set_slewfast(tdv_osd_pin_out.v.u8, true);
 
   // gpio_set_drive_strength(info->out, GPIO_DRIVE_12MA);
   // gpio_set_drive_strength(info->sync, GPIO_DRIVE_12MA);
