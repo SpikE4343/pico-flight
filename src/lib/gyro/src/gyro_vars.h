@@ -18,5 +18,7 @@ DECL_EXTERN_DATA_VAR(tdv_gyro_rdy_pin)        //
 
 DECL_EXTERN_DATA_VAR(tdv_gyro_sample_count)   //
 DECL_EXTERN_DATA_VAR(tdv_gyro_state)          //
+DECL_EXTERN_DATA_VAR(tdv_gyro_cal_samples)          //
+DECL_EXTERN_DATA_VAR(tdv_gyro_cal_retries)          //
 
 #endif

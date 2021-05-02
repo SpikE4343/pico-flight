@@ -82,6 +82,7 @@ END_DEF_DV_ARRAY()
 #define rc_mapping_name "rc.mapping"
 #define rc_mapping_desc "RC input mapping to controls"
 
+
 BEGIN_DEF_DV_ARRAY( tdv_rc_mapping )
   DEF_DV_ARRAY_ITEM(0, 0, rc_mapping_name, rc_mapping_desc, Tdt_u8, Tdm_RW)
   DEF_DV_ARRAY_ITEM(1, 1, rc_mapping_name, rc_mapping_desc, Tdt_u8, Tdm_RW)

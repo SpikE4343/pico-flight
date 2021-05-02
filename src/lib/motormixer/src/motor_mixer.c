@@ -6,13 +6,6 @@
 
 #include "motor_mixer.h"
 
-typedef struct
-{
-
-} MotorMixerState_t;
-
-static MotorMixerConfig_t *config;
-static MotorMixerState_t state;
 
 void motorMixerInit(MotorMixerConfig_t *_config)
 {
@@ -68,3 +61,37 @@ void motorMixerCalculateOutputs(TDataVar_t *input, TDataVar_t *output)
     // output[m] = fixed_sub( tempOut[m], normMin);
   }
 }
+
+#define motor0_mapping_name "motor0.mix"
+#define motor1_mapping_name "motor1.mix"
+#define motor2_mapping_name "motor2.mix"
+#define motor3_mapping_name "motor3.mix"
+#define rc_mapping_desc "RC input mapping to controls"
+
+BEGIN_DEF_DV_ARRAY( tdv_motor0_mix )
+  DEF_DV_ARRAY_ITEM(0, -1.0f, motor0_mapping_name, rc_mapping_desc, Tdt_f32, Tdm_RW)
+  DEF_DV_ARRAY_ITEM(1, 1.0f, motor0_mapping_name, rc_mapping_desc, Tdt_f32, Tdm_RW)
+  DEF_DV_ARRAY_ITEM(2, -1.0f, motor0_mapping_name, rc_mapping_desc, Tdt_f32, Tdm_RW)
+  DEF_DV_ARRAY_ITEM(3, 1.0f, motor0_mapping_name, rc_mapping_desc, Tdt_f32, Tdm_RW)
+END_DEF_DV_ARRAY()
+
+BEGIN_DEF_DV_ARRAY( tdv_motor1_mix )
+  DEF_DV_ARRAY_ITEM(0, -1.0f, motor1_mapping_name, rc_mapping_desc, Tdt_f32, Tdm_RW)
+  DEF_DV_ARRAY_ITEM(1, -1.0f, motor1_mapping_name, rc_mapping_desc, Tdt_f32, Tdm_RW)
+  DEF_DV_ARRAY_ITEM(2, 1.0f, motor1_mapping_name, rc_mapping_desc, Tdt_f32, Tdm_RW)
+  DEF_DV_ARRAY_ITEM(3, 1.0f, motor1_mapping_name, rc_mapping_desc, Tdt_f32, Tdm_RW)
+END_DEF_DV_ARRAY()
+
+BEGIN_DEF_DV_ARRAY( tdv_motor2_mix )
+  DEF_DV_ARRAY_ITEM(0, 1.0f, motor2_mapping_name, rc_mapping_desc, Tdt_f32, Tdm_RW)
+  DEF_DV_ARRAY_ITEM(1, 1.0f, motor2_mapping_name, rc_mapping_desc, Tdt_f32, Tdm_RW)
+  DEF_DV_ARRAY_ITEM(2, 1.0f, motor2_mapping_name, rc_mapping_desc, Tdt_f32, Tdm_RW)
+  DEF_DV_ARRAY_ITEM(3, 1.0f, motor2_mapping_name, rc_mapping_desc, Tdt_f32, Tdm_RW)
+END_DEF_DV_ARRAY()
+
+BEGIN_DEF_DV_ARRAY( tdv_motor3_mix )
+  DEF_DV_ARRAY_ITEM(0, 1.0f, motor3_mapping_name, rc_mapping_desc, Tdt_f32, Tdm_RW)
+  DEF_DV_ARRAY_ITEM(1, -1.0f, motor3_mapping_name, rc_mapping_desc, Tdt_f32, Tdm_RW)
+  DEF_DV_ARRAY_ITEM(2, -1.0f, motor3_mapping_name, rc_mapping_desc, Tdt_f32, Tdm_RW)
+  DEF_DV_ARRAY_ITEM(3, 1.0f, motor3_mapping_name, rc_mapping_desc, Tdt_f32, Tdm_RW)
+END_DEF_DV_ARRAY()

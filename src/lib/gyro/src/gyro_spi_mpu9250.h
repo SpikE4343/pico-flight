@@ -37,14 +37,14 @@ typedef struct
   Vector3f_t avg;
   Vector3i16_t zeroValue;
   uint8_t retry;
-  Vector3f_t* samples;
 } GyroCalibrationState_t;
 
 // Runtime State
 typedef struct 
-{
-    
+{    
     GyroCalibrationState_t cal;
+    uint32_t sampleCount;
+    int state;
 
     struct
     {

@@ -2,6 +2,8 @@
 #define __motor_mixer_INCLUDED__
 
 #include "vector.h"
+#include "telemetry.h"
+
 // #include "math_fixed.h"
 
 typedef struct
@@ -17,6 +19,11 @@ typedef struct
 } MotorMixerConfig_t;
 
 void motorMixerInit(MotorMixerConfig_t *info);
-void motorMixerCalculateOutputs(float *input, float *output);
+void motorMixerCalculateOutputs(TDataVar_t *input, TDataVar_t *output);
+
+DECL_EXTERN_DV_ARRAY(tdv_motor0_mix)
+DECL_EXTERN_DV_ARRAY(tdv_motor1_mix)
+DECL_EXTERN_DV_ARRAY(tdv_motor2_mix)
+DECL_EXTERN_DV_ARRAY(tdv_motor3_mix)
 
 #endif
