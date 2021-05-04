@@ -43,7 +43,9 @@ class DataReader:
     self.crcErrors = 0
     
     telem.data_frame_packet.stream2.readSize = self.inputWaitingData
-    telem.data_frame_packet.compile()
+    
+    
+    self.data_frame_packet = telem.data_frame_packet.compile()
 
   def inputWaitingData(self):
     if self.ser:
@@ -69,7 +71,7 @@ class DataReader:
                           
     while parse > 0:
       try:
-        msg =   telem.data_frame_packet.parse_stream(self.ser)
+        msg =   self.data_frame_packet.parse_stream(self.ser)
         
         if msg.header.type == "MOD":
           id = msg.data.payload.value.mod.value.id
@@ -80,7 +82,7 @@ class DataReader:
           self.samples[id] = value
           self.sampleCounts[id] += 1
           
-          if( self.sampleTime[id] >= fst):
+          if( self.sampleTime[id] > fst):
             print("Time rolled back:", id, fst-self.sampleTime[id], fst, self.sampleTime[id], id )
           else:
             meta = self.descriptions.get(value.id)

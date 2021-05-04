@@ -69,10 +69,10 @@ void motorMixerCalculateOutputs(TDataVar_t *input, TDataVar_t *output)
   }
 }
 
-#define motor0_mapping_name "motor0.mix"
-#define motor1_mapping_name "motor1.mix"
-#define motor2_mapping_name "motor2.mix"
-#define motor3_mapping_name "motor3.mix"
+#define motor0_mapping_name "motor.0.mix"
+#define motor1_mapping_name "motor.1.mix"
+#define motor2_mapping_name "motor.2.mix"
+#define motor3_mapping_name "motor.3.mix"
 #define motor_mapping_desc "Motor mix values for each axis"
 
 BEGIN_DEF_DV_ARRAY( tdv_motor0_mix )

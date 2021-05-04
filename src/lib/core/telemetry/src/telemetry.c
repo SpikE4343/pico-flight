@@ -133,8 +133,10 @@ void telemetryInit()
 
   tdv_telemetry_update_us.v.u32 = timer_hw->timelr;
 
+  telemetry_register(&tdv_next_desc_send);
   telemetry_register(&tdv_telemetry_update_us);
   telemetry_register(&tdv_telemetry_queue);
+
 
   dma_init();
 }
@@ -339,6 +341,7 @@ void __time_critical_func(telemetry_send)(uint64_t start, uint64_t now)
   telemetry_sample(&tdv_telemetry_queue);
   telemetry_sample(&tdv_telemetry_update_us);
 
+
   tdv_telemetry_update_us.v.u32 = timer_hw->timelr;
 
   uint32_t frameId = s.frameCount++;
@@ -349,10 +352,16 @@ void __time_critical_func(telemetry_send)(uint64_t start, uint64_t now)
 
   last_ts = ts;
 
+  bool sendsampled = false;
+ 
   uint32_t sendLength = 0;
   for (int p = 0; p < s.valueModCount; ++p)
   {
     TDataFramePacket_t *packet = (s.valueMods + p);
+
+    if (tdv_next_desc_send.v.u32 == packet->payload.value.value.id)
+      sendsampled = true;
+
     packet->payload.frameId = frameId;
     if (packet->payload.value.time == 0.0f)
       packet->payload.value.time = ts;
@@ -360,13 +369,31 @@ void __time_critical_func(telemetry_send)(uint64_t start, uint64_t now)
     sendLength += telemetry_write_data_frame(packet);
   }
 
+  
+
   // printf("--- s ---\n");
   // add a desc packet to the end if we need to send one
   if (tdv_next_desc_send.v.u32 < s.itemCount)
   {
+    
+    TDataVar_t *var = value_table_get(tdv_next_desc_send.v.u32 + 1);
+
+    if(!sendsampled)
+    {
+      telemetry_sample(var);
+
+      TDataFramePacket_t *packet = (s.valueMods + (s.valueModCount-1));
+
+      packet->payload.frameId = frameId;
+      if (packet->payload.value.time == 0.0f)
+        packet->payload.value.time = ts;
+
+      sendLength += telemetry_write_data_frame(packet);
+
+    }
+
     uint8_t *descStart = ((uint8_t *)s.valueMods) + sendLength;
 
-    TDataVar_t *var = value_table_get(tdv_next_desc_send.v.u32 + 1);
     // printf("--- %s --- 1\n", var->meta.name);
 
     sendLength += telemetry_write_desc_frame((TDataDescFramePacket_t *)descStart, var);

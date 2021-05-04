@@ -373,6 +373,7 @@ void flightPrintTask()
 
   telemetry_sample_array(tdv_fc_rates_raw, 3);
   telemetry_sample_array(tdv_fc_rates_filtered, 3);
+  telemetry_sample_array(tdv_motor_output, tdv_motor_count.v.u32);
 
   //telemetry_sample_array(tdv_motor_output, tdv_motor_count.v.u8);
 
