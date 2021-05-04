@@ -13,6 +13,7 @@
 #include "motor_output_dshot_pio.h"
 #include "dshot_parallel.pio.h"
 #include "math_util.h"
+#include "data_vars.h"
 
 typedef struct
 {

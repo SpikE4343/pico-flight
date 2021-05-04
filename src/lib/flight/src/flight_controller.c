@@ -12,7 +12,7 @@
 #include "motor_common.h"
 #include "motor_mixer.h"
 #include "motor_output.h"
-#include "telemetry.h"
+#include "data_vars.h"
 // #include "timers.h"
 #include "pico/stdlib.h"
 #include "pico/float.h"
@@ -145,13 +145,11 @@ void flightCore1()
 
 void flightInit()
 {
+  printf("flightInit\n");
   sleep_ms(2000);
 
-  flightInitVars();
 
   tdv_fc_state.v.i32 = FC_STATE_BOOT;
-
-  telemetryInit();
 
   multicore_launch_core1(flightCore1);
 
@@ -160,7 +158,6 @@ void flightInit()
 
   inputRxInit();
   osdInit();
-
   
 
   state.startupMs = get_time();
@@ -322,7 +319,7 @@ void flightControlUpdate()
   }
 
   // motorMixerCalculateOutputs(&state.r.motorInputs, tdv_motor_output);
-   motorOutputSet(tdv_motor_output);
+  // motorOutputSet(tdv_motor_output);
 
   ++tdv_fc_control_updates.v.u32;
 }
@@ -377,7 +374,7 @@ void flightPrintTask()
   telemetry_sample_array(tdv_fc_rates_raw, 3);
   telemetry_sample_array(tdv_fc_rates_filtered, 3);
 
-  telemetry_sample_array(tdv_motor_output, tdv_motor_count.v.u8);
+  //telemetry_sample_array(tdv_motor_output, tdv_motor_count.v.u8);
 
   telemetry_sample(&tdv_fc_gyro_updates);
   telemetry_sample(&tdv_fc_state);

@@ -4,6 +4,7 @@
 #include <math.h>
 #include <assert.h>
 #include <malloc.h>
+#include <stdio.h>
 
 #include "hardware/timer.h"
 #include "hardware/dma.h"
@@ -43,28 +44,28 @@ static uint64_t get_time(void)
 DEF_STATIC_DATA_VAR(tdv_next_desc_send, 0,
                     "telemetry.next_desc_send",
                     "The next description meta data value to send",
-                    Tdt_u32, Tdm_RW);
+                    u32, Tdm_RW);
 
 DEF_STATIC_DATA_VAR(tdv_telemetry_queue, 0,
                     "telemetry.queue",
                     "Number of valud mods waiting to be sent",
-                    Tdt_u32, Tdm_read);
+                    u32, Tdm_read);
 
 DEF_STATIC_DATA_VAR(tdv_telemetry_update_us, 0,
                     "telemetry.update.us",
                     "Amount of time, in microseconds, taken to send a sample frame",
-                    Tdt_u32, Tdm_read);
+                    u32, Tdm_read);
 
 
 DEF_DATA_VAR(tdv_telemetry_sample_buffer_count, 64,
   "telemetry.sample.buffer.count",
   "Number of samples to store in sample buffer",
-  Tdt_u32, Tdm_RW | Tdm_config);
+  u32, Tdm_RW | Tdm_config);
 
 DEF_DATA_VAR(tdv_telemetry_val_count, 1024,
   "telemetry.values.max",
   "Maximum number of data vars that the system can store",
-  Tdt_u32, Tdm_RW | Tdm_config);
+  u32, Tdm_RW | Tdm_config);
 
 static void __time_critical_func(dma_complete_handler)()
 {
@@ -112,6 +113,8 @@ static void dma_send(uint32_t sendLength)
 
 void telemetryInit()
 {
+  printf("init telemetry system\n");
+
   memset(&s, 0, sizeof(s));
 
 
@@ -128,10 +131,10 @@ void telemetryInit()
   s.frameCount = 0;
   s.frameTime = 0;
 
-  telemetry_register(&tdv_telemetry_queue);
-  telemetry_register(&tdv_telemetry_update_us);
-
   tdv_telemetry_update_us.v.u32 = timer_hw->timelr;
+
+  telemetry_register(&tdv_telemetry_update_us);
+  telemetry_register(&tdv_telemetry_queue);
 
   dma_init();
 }
@@ -192,6 +195,7 @@ bool telemetry_register_array(TDataVar_t *dataVar, int count)
 
 void telemetry_sample(TDataVar_t *dataVar)
 {
+  assert(dataVar->id != 0);
   // buffer full
   // TODO: some usable error here
   if (s.valueModCount >= s.cfg->valueModBufferCount)

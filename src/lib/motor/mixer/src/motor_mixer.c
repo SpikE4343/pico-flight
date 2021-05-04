@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "math_util.h"
+#include "data_vars.h"
 
 #include "motor_mixer.h"
 
@@ -17,10 +18,7 @@ TDataVar_t* mmixes[] = {
 void motorMixerInit()
 {
   printf("mixer init\n");
-  telemetry_register_array(tdv_motor0_mix, 4);
-  telemetry_register_array(tdv_motor1_mix, 4);
-  telemetry_register_array(tdv_motor2_mix, 4);
-  telemetry_register_array(tdv_motor3_mix, 4);
+
 }
 
 int motorHasValue(float val)
@@ -78,30 +76,30 @@ void motorMixerCalculateOutputs(TDataVar_t *input, TDataVar_t *output)
 #define motor_mapping_desc "Motor mix values for each axis"
 
 BEGIN_DEF_DV_ARRAY( tdv_motor0_mix )
-  DEF_DV_ARRAY_ITEM(0, -1.0f, motor0_mapping_name, motor_mapping_desc, Tdt_f32, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM(1, 1.0f, motor0_mapping_name, motor_mapping_desc, Tdt_f32, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM(2, -1.0f, motor0_mapping_name, motor_mapping_desc, Tdt_f32, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM(3, 1.0f, motor0_mapping_name, motor_mapping_desc, Tdt_f32, Tdm_RW | Tdm_config)
+  DEF_DV_ARRAY_ITEM(0, -1.0f, motor0_mapping_name, motor_mapping_desc, f32, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM(1, 1.0f, motor0_mapping_name, motor_mapping_desc, f32, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM(2, -1.0f, motor0_mapping_name, motor_mapping_desc, f32, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM(3, 1.0f, motor0_mapping_name, motor_mapping_desc, f32, Tdm_RW | Tdm_config)
 END_DEF_DV_ARRAY();
 
 BEGIN_DEF_DV_ARRAY( tdv_motor1_mix )
-  DEF_DV_ARRAY_ITEM(0, -1.0f, motor1_mapping_name, motor_mapping_desc, Tdt_f32, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM(1, -1.0f, motor1_mapping_name, motor_mapping_desc, Tdt_f32, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM(2, 1.0f, motor1_mapping_name, motor_mapping_desc, Tdt_f32, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM(3, 1.0f, motor1_mapping_name, motor_mapping_desc, Tdt_f32, Tdm_RW | Tdm_config)
+  DEF_DV_ARRAY_ITEM(0, -1.0f, motor1_mapping_name, motor_mapping_desc, f32, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM(1, -1.0f, motor1_mapping_name, motor_mapping_desc, f32, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM(2, 1.0f, motor1_mapping_name, motor_mapping_desc, f32, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM(3, 1.0f, motor1_mapping_name, motor_mapping_desc, f32, Tdm_RW | Tdm_config)
 END_DEF_DV_ARRAY();
 
 BEGIN_DEF_DV_ARRAY( tdv_motor2_mix )
-  DEF_DV_ARRAY_ITEM(0, 1.0f, motor2_mapping_name, motor_mapping_desc, Tdt_f32, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM(1, 1.0f, motor2_mapping_name, motor_mapping_desc, Tdt_f32, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM(2, 1.0f, motor2_mapping_name, motor_mapping_desc, Tdt_f32, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM(3, 1.0f, motor2_mapping_name, motor_mapping_desc, Tdt_f32, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM(0, 1.0f, motor2_mapping_name, motor_mapping_desc, f32, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM(1, 1.0f, motor2_mapping_name, motor_mapping_desc, f32, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM(2, 1.0f, motor2_mapping_name, motor_mapping_desc, f32, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM(3, 1.0f, motor2_mapping_name, motor_mapping_desc, f32, Tdm_RW | Tdm_config),
 END_DEF_DV_ARRAY();
 
 BEGIN_DEF_DV_ARRAY( tdv_motor3_mix )
-  DEF_DV_ARRAY_ITEM(0, 1.0f, motor3_mapping_name, motor_mapping_desc, Tdt_f32, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM(1, -1.0f, motor3_mapping_name, motor_mapping_desc, Tdt_f32, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM(2, -1.0f, motor3_mapping_name, motor_mapping_desc, Tdt_f32, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM(3, 1.0f, motor3_mapping_name, motor_mapping_desc, Tdt_f32, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM(0, 1.0f, motor3_mapping_name, motor_mapping_desc, f32, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM(1, -1.0f, motor3_mapping_name, motor_mapping_desc, f32, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM(2, -1.0f, motor3_mapping_name, motor_mapping_desc, f32, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM(3, 1.0f, motor3_mapping_name, motor_mapping_desc, f32, Tdm_RW | Tdm_config),
 END_DEF_DV_ARRAY();
 

@@ -18,16 +18,17 @@
 #include "pico/platform.h"
 
 #include "font8x8_basic.h"
+#include "data_vars.h"
 
 DEF_DATA_VAR(tdv_osd_pin_sync, 14, 
   "osd.pin.sync",
   "Gpio pin for NTSC video sync bit",
-  Tdt_u8, Tdm_RW | Tdm_config);
+  u8, Tdm_RW | Tdm_config);
 
 DEF_DATA_VAR(tdv_osd_pin_out, 15, 
   "osd.pin.output",
   "Gpio pin for NTSC video signal ouput bit",
-  Tdt_u8, Tdm_RW | Tdm_config);
+  u8, Tdm_RW | Tdm_config);
 
 
 

@@ -4,9 +4,6 @@
 
 
 #include "vector.h"
-#include "math_fixed.h"
-#include "telemetry.h"
-#include "gyro_vars.h"
 
 //TODO: extract common gyro configs/code to gyro.h
 #define GYRO_MAX_DPS 2000
@@ -56,7 +53,6 @@ typedef struct
         } __attribute__((packed));
     } __attribute__((packed));
 
-    fixed_t fixedRates[3];
 } GyroState_t;
 
 void gyroInit();

@@ -11,7 +11,6 @@
 #include "flight_attitude.h"
 #include "osd.h"
 
-#include "fc_vars.h"
 
 // typedef struct
 // {

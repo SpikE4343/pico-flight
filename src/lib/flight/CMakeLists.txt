@@ -13,6 +13,8 @@ target_include_directories(flight INTERFACE
 target_link_libraries(flight INTERFACE
     pico_multicore
     core-math
+    core-telemetry
+    data-vars
     motor-common
     motor-mixer
     motor-output

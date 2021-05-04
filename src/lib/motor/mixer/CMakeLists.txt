@@ -9,6 +9,7 @@ target_include_directories(motor-mixer INTERFACE
 target_link_libraries(motor-mixer INTERFACE
     core-math
     motor-common
+    data-vars
 )
 
 # add_subdirectory(test)

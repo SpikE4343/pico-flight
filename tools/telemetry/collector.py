@@ -81,7 +81,7 @@ class DataReader:
           self.sampleCounts[id] += 1
           
           if( self.sampleTime[id] >= fst):
-            print("Time rolled back:", msg.data.payload.value.id, fst-self.sampleTime[id], fst, self.sampleTime[id], id )
+            print("Time rolled back:", id, fst-self.sampleTime[id], fst, self.sampleTime[id], id )
           else:
             meta = self.descriptions.get(value.id)
             if meta is None:

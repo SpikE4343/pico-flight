@@ -18,7 +18,7 @@
 #include "hardware/dma.h"
 #include "hardware/irq.h"
 #include "gyro_spi_mpu9250.h"
-#include "telemetry.h"
+#include "data_vars.h"
 
 
 typedef spi_inst_t *spi_t;
@@ -345,7 +345,7 @@ void gyroConfigure()
   gyroWriteRegister(MPU_RA_INT_PIN_CFG, 0 << 7 | 0 << 6 | 0 << 5 | 1 << 4 | 0 << 3 | 0 << 2 | 1 << 1 | 0 << 0); // INT_ANYRD_2CLEAR, BYPASS_EN
   gyroWriteRegister(MPU_RA_INT_ENABLE, 0x01);
 
-  spi_set_baudrate(s.spi, tdv_gyro_spi_clk_rates.v.u32);
+  spi_set_baudrate(s.spi, tdv_gyro_spi_clk_rates_hz.v.u32);
   printf("gyro configured\n");
 }
 
@@ -361,7 +361,7 @@ void gyroInit()
 
   s.spi = spi0;
 
-  spi_init(s.spi, u32v(tdv_gyro_spi_clk_reg));
+  spi_init(s.spi, tdv_gyro_spi_clk_reg_hz.v.u32);
 
   gpio_set_function(u8v(tdv_gyro_spi_pins_in), GPIO_FUNC_SPI);
   gpio_set_function(u8v(tdv_gyro_spi_pins_clk), GPIO_FUNC_SPI);

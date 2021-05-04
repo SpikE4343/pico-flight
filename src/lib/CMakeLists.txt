@@ -1,5 +1,6 @@
 # add_subdirectory(test)
 add_subdirectory(core)
+add_subdirectory(data_vars)
 add_subdirectory(gyro)
 add_subdirectory(io_rc)
 add_subdirectory(motor)

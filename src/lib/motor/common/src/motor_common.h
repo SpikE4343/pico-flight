@@ -8,7 +8,5 @@
 void motorCommonInit();
 
 
-DECL_EXTERN_DV_ARRAY(tdv_motor_direction);
-DECL_EXTERN_DATA_VAR(tdv_motor_count);  
 
 #endif

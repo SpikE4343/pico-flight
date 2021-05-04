@@ -20,6 +20,7 @@
 
 #include "math_util.h"
 #include "io_rc.h"
+#include "data_vars.h"
 #include "spm_srxl.h"
 
 #define BUFFER_SIZE 256
@@ -128,7 +129,6 @@ void inputRxInit()
   s.rx.read = s.rx.write = 0;
   memset(s.rx.buffer, 0, sizeof(s.rx.buffer));
   
-  ioRCInitVars();
 
   tdv_rc_recv_state.v.u8 = RX_RESET;
 

@@ -7,8 +7,10 @@ target_sources(gyro INTERFACE
 
 target_include_directories(gyro INTERFACE 
     ${CMAKE_CURRENT_LIST_DIR}/src )
+    
 target_link_libraries(gyro INTERFACE 
   pico_stdlib 
   hardware_spi
   core-telemetry
+  data-vars
   )

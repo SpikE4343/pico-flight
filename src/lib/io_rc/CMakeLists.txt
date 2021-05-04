@@ -10,6 +10,8 @@ target_include_directories(io_rc INTERFACE
 
 target_link_libraries(io_rc INTERFACE 
     core-math
+    core-telemetry
+    data-vars
     srxl2
     hardware_uart
 )
