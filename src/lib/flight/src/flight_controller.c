@@ -245,8 +245,7 @@ void flightControlUpdate()
 
   case FC_STATE_CALIBRATE:
   {
-    GyroState_t *gs = gyroState();
-    if (gs != NULL && (gs->state == GYRO_ST_READY || gs->state == GYRO_ST_FAIL))
+    if( tdv_gyro_state.v.u32 == GYRO_ST_READY || tdv_gyro_state.v.u32 == GYRO_ST_FAIL)
       next = FC_STATE_DISARMED;
     break;
   }

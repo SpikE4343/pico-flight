@@ -1,3 +1,4 @@
 build/
+tools/configurator/build*
 __pycache__
-tools/telemetry/construct/
+tools/telemetry/pystuff/
