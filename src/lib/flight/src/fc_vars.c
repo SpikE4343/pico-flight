@@ -67,17 +67,17 @@ DEF_DATA_VAR(tdv_fc_telemetry_rate_hz, 60,
   u32, Tdm_RW | Tdm_config);
 
 BEGIN_DEF_DV_ARRAY( tdv_fc_rates_raw )
-  DEF_DV_ARRAY_ITEM("roll", 0.0f,
+  DEF_DV_ARRAY_ITEM(roll, 0.0f,
     "fc.gyro.raw",
     "Flight Controller copy of raw gyro roll data",
     f32, Tdm_RW),
 
-  DEF_DV_ARRAY_ITEM("pitch", 0.0f, 
+  DEF_DV_ARRAY_ITEM(pitch, 0.0f, 
     "fc.gyro.raw", 
     "Flight Controller copy of raw gyro pitch data", 
     f32, Tdm_RW),
 
-  DEF_DV_ARRAY_ITEM("yaw", 0.0f, 
+  DEF_DV_ARRAY_ITEM(yaw, 0.0f, 
     "fc.gyro.raw",
     "Flight Controller copy of raw gyro yaw data",
     f32, Tdm_RW)
@@ -85,17 +85,17 @@ END_DEF_DV_ARRAY();
 
 
 BEGIN_DEF_DV_ARRAY( tdv_fc_rates_filtered )
-  DEF_DV_ARRAY_ITEM("roll", 0.0f,
+  DEF_DV_ARRAY_ITEM(roll, 0.0f,
     "fc.gyro.filtered",
     "Flight Controller copy of filtered gyro roll data",
     f32, Tdm_RW),
 
-  DEF_DV_ARRAY_ITEM("pitch", 0.0f, 
+  DEF_DV_ARRAY_ITEM(pitch, 0.0f, 
     "fc.gyro.filtered", 
     "Flight Controller copy of filtered gyro pitch data", 
     f32, Tdm_RW),
 
-  DEF_DV_ARRAY_ITEM("yaw", 0.0f, 
+  DEF_DV_ARRAY_ITEM(yaw, 0.0f, 
     "fc.gyro.filtered",
     "Flight Controller copy of filtered gyro yaw data",
     f32, Tdm_RW)

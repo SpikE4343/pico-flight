@@ -2,6 +2,18 @@ from construct import *
 from construct.core import Float32l, Int32ul, Int32sl, Int8ul, Int8sl, Int16ul, Int16sl
 import time
 
+from construct.lib.py3compat import int2byte
+
+import packet
+import io
+
+
+class MsgTypes:
+  DESC=50 
+  MOD=100
+
+MARKER_BYTE = 0x7c
+
 class RebufferedBytesIO2(object):
 
     def __init__(self, substream, tailcutoff=None, readSize=lambda: 1024):
@@ -128,7 +140,7 @@ header = Struct(
 
 
 
-data_type = Enum(Int8ul, 
+data_type = Enum(Byte, 
   Tdt_u8=0,
   Tdt_i8=1,
   Tdt_bool=2,
@@ -139,11 +151,12 @@ data_type = Enum(Int8ul,
   Tdt_u32=7,
   Tdt_f32=8)
 
-mod_type = FlagsEnum(Int8ul,
+mod_type = FlagsEnum(Byte,
   Tdm_read = 0x01,
   Tdm_write= 0x02,
   Tdm_RW = 0x03,
-  Tdm_restart_requ= 0x04)
+  Tdm_restart_requ= 0x04,
+  Tdm_config=0x08)
 
 
 data_value = Struct(
@@ -200,3 +213,108 @@ data_frame_packet = Rebuffered2(Struct(
     "DESC": dataPayload(data_var)
   })
 ), readSize=lambda: 64, tailcutoff=1024)
+
+mod = {
+  'header': { 
+    'marker': 0x7C, 
+    'type': 'MOD'
+    },
+  'data': {
+    'payload': { 
+      'value':{
+        'id':0,
+        'mod': {
+          'type' : 0x02,
+          'time' : 100,
+          'value' : {
+            'id': 19293,
+            'type': 'Tdt_u32',
+            'data': 1000 
+          }
+        }      
+      }
+    }
+  }
+}
+
+class Receiver(packet.Receiver):
+  RESET = 0
+  MARKER = 1
+  HEADER_TYPE = 2
+  HEADER_SIZE = 3
+  PAYLOAD = 4
+  PROCESS_PAYLOAD = 5
+  
+  def __init__(self, handlers:dict) -> None:
+      self.state = Receiver.RESET
+      self.marker = 0
+      self.type = 0
+      self.size = 0
+      self.payload = bytearray()
+      self.crc = 0
+      self.handlers = handlers
+    
+  def next(self, byte):
+    # print(f"[{self.state} {self.type} {self.size} {self.crc}] -> {hex(byte)}")
+    if self.state == Receiver.RESET:
+      self.state = Receiver.MARKER
+      self.payload.clear()
+      self.crc = 0
+      self.type = 0
+      self.size = 0 
+      self.marker = 0
+      self.next(byte)
+    
+    elif self.state == Receiver.MARKER:
+      if byte == MARKER_BYTE:
+        self.marker = byte
+      elif self.marker == MARKER_BYTE:
+        self.type = byte
+        self.state = Receiver.HEADER_SIZE
+        
+    elif self.state == Receiver.HEADER_SIZE:
+      self.size = byte
+      self.state = Receiver.PAYLOAD
+    
+    elif self.state == Receiver.PAYLOAD:
+      self.payload.append(byte)
+      read = len(self.payload)
+      
+      if read == 1:
+        self.crc = byte
+      elif read <= self.size:
+        self.crc ^= byte
+      elif self.crc == byte:
+        self.state = Receiver.PROCESS_PAYLOAD
+        self.processPayload(self.payload)
+        self.state = Receiver.RESET
+      else:
+        print('CRC Failure: calculated:', self.crc, 'received:', byte )
+        self.state = Receiver.RESET
+    elif self.state == Receiver.PROCESS_PAYLOAD:
+      print('Error incoming data:', byte, 'while processing previous payload:', self.type, self.size)
+    
+
+   
+class Sender(packet.Sender):
+  def __init__(self, handlers) -> None:
+      super().__init__(handlers)
+      
+  def serialize(self, writer, type, payload):
+    writer.write(MARKER_BYTE)
+    writer.write(type)
+    size = 0
+    for b in payload:
+      if size == 0:
+        crc = b
+        continue
+      
+      crc ^= b
+      size += 1
+
+    writer.write(size)
+    writer.write(payload)
+    writer.write(crc)
+    
+    
+

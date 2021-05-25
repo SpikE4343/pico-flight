@@ -11,39 +11,12 @@ import telemetry as telem
 import threading
 import queue
 import re
-import packet
 
 from cmd import Cmd
 
 setre = re.compile("(.*?)\s*=\s*(\d+|true|false)")
 cmd_quit = "quit"
 commands = queue.Queue()
-
-class SerialReader(packet.Reader):
-  def __init__(self, serial) -> None:
-      super().__init__()
-      self.serial = serial
-      
-  def available(self):
-    if not self.serial.isOpen():
-      return
-    
-    data = self.serial.in_waiting
-    if data <= 0:
-      return None
-    
-    read = self.serial.read(data)
-    for d in read:
-      yield d
-      
-class SerialWriter(packet.Writer):
-  def __init__(self, serial) -> None:
-    self.serial = serial
-    
-  def write(self, data):
-    self.serial.write(data)  
-
-
 class DataReader:
     def __init__(self):
 
@@ -51,7 +24,7 @@ class DataReader:
         self.connected = False
         self.lnpConnect()
 
-        self.ser = serial.Serial(baudrate=115200, stopbits=1)
+        self.serialConnect(port="/dev/ttyACM0", baud=115200)
 
         self.samples = {}
         self.sampleCounts = defaultdict(int)
@@ -68,64 +41,9 @@ class DataReader:
         self.readpos = 0
         self.crcErrors = 0
 
-        # telem.data_frame_packet.stream2.readSize = self.inputWaitingData
+        telem.data_frame_packet.stream2.readSize = self.inputWaitingData
 
-        # self.data_frame_packet = telem.data_frame_packet.compile()
-        
-        self.packetizer = packet.Packetizer(
-          receiver = telem.Receiver(
-            handlers = {
-              telem.MsgTypes.DESC: self.recvDescPayload, 
-              telem.MsgTypes.MOD: self.recvModPayload
-            }),
-          sender = telem.Sender(
-            handlers = {
-              telem.MsgTypes.DESC: telem.data_var, 
-              telem.MsgTypes.MOD: telem.data_frame
-            }),
-          reader = SerialReader(self.ser),
-          writer = SerialWriter(self.ser)
-          )
-
-    def recvDescPayload(self, payload):
-      desc = telem.data_var.parse(payload)
-      self.descriptions[desc.id] = desc.meta
-      self.sampleNames[desc.meta.name] = desc.id
-    
-    def recvModPayload(self, payload):
-      msg = telem.data_frame.parse(payload)
-      id = msg.mod.value.id
-      value = msg.mod.value
-      st = msg.mod.time
-      fst = float(st)
-
-      self.samples[id] = value
-      self.sampleCounts[id] += 1
-
-      if self.sampleTime[id] > fst:
-          print(
-              "Time rolled back:",
-              id,
-              fst - self.sampleTime[id],
-              fst,
-              self.sampleTime[id],
-              id,
-          )
-      else:
-          meta = self.descriptions.get(value.id)
-          if meta is None:
-              name = value.id
-          else:
-              name = meta.name
-
-          self.send_sample(
-              str(name), timestamp=fst, value=float(value.data)
-          )
-
-      self.sampleTime[id] = fst
-      self.msgCount += 1
-    
-    
+        self.data_frame_packet = telem.data_frame_packet.compile()
 
     def lnpConnect(self):
         try:
@@ -136,14 +54,10 @@ class DataReader:
           
     def serialConnect(self, port, baud):
       try:
-        if self.ser.isOpen():
-          return
-                
-        self.ser.port = port
-        self.ser.baudrate = baud
-        self.ser.open()
+          self.ser = serial.Serial(port=port, baudrate=baud, stopbits=1)
       except Exception as e:
-        print(e)
+          print(e)
+          self.ser = None
 
     def send_sample(self, name, timestamp, value):
         if not self.connected:
@@ -155,14 +69,104 @@ class DataReader:
         except:
             self.connected = False
 
+    def inputWaitingData(self):
+        if self.ser:
+            waiting = self.ser.inWaiting()
+            # print(waiting)
+            return waiting
+        return 16
+
     def process(self):
         self.updates += 1
 
-        self.packetizer.update()
+        waiting = self.inputWaitingData()
 
-        self.msgCount=0
-        self.msgBadCount=0
-        self.crcErrors=0
+        self.send_sample(
+            "serial.waiting.in", timestamp=time.time(), value=float(waiting)
+        )
+
+        if waiting < 128:
+            return
+
+        msgCount = 0
+        msgBadCount = 0
+        crcErrors = 0
+        parse = 10
+
+        while parse > 0:
+            try:
+                msg = self.data_frame_packet.parse_stream(self.ser)
+
+                if msg.header.type == "MOD":
+                    id = msg.data.payload.value.mod.value.id
+                    value = msg.data.payload.value.mod.value
+                    st = msg.data.payload.value.mod.time
+                    fst = float(st)
+
+                    self.samples[id] = value
+                    self.sampleCounts[id] += 1
+
+                    if self.sampleTime[id] > fst:
+                        print(
+                            "Time rolled back:",
+                            id,
+                            fst - self.sampleTime[id],
+                            fst,
+                            self.sampleTime[id],
+                            id,
+                        )
+                    else:
+                        meta = self.descriptions.get(value.id)
+                        if meta is None:
+                            name = value.id
+                        else:
+                            name = meta.name
+
+                        self.send_sample(
+                            str(name), timestamp=fst, value=float(value.data)
+                        )
+
+                    self.sampleTime[id] = fst
+                    msgCount += 1
+                elif msg.header.type == "DESC":
+                    self.descriptions[
+                        msg.data.payload.value.id
+                    ] = msg.data.payload.value.meta
+                    self.sampleNames[
+                        msg.data.payload.value.meta.name
+                    ] = msg.data.payload.value.id
+                else:
+                    msgBadCount += 1
+
+            except StreamError as se:
+                pass
+
+            except ConstError as ce:
+                # print("ConstError:", ce)
+                pass
+            except ChecksumError as cse:
+                print(cse)
+                crcErrors += 1
+            except Exception as e:
+                print("Error:", e)
+                parse = 0
+            except EOFError:
+                print("EOF")
+                parse = 0
+            finally:
+                parse -= 1
+
+        self.send_sample(
+            "reader.msg.valid", timestamp=time.time(), value=float(msgCount)
+        )
+
+        self.send_sample(
+            "reader.msg.invalid", timestamp=time.time(), value=float(msgBadCount)
+        )
+
+        self.send_sample(
+            "reader.msg.err.crc", timestamp=time.time(), value=float(crcErrors)
+        )
 
 
 reader = DataReader()
@@ -189,7 +193,7 @@ def readerThread():
             time.sleep(sleep / 1e9)
 
 def tabulateValue(v):
-  print( tabulate(v if isinstance(v, list) else [v], headers=["Id", "Name", "Value", "Samples", "Type", "Mods Allowed", "Description"]))
+  print( tabulate(v if isinstance(v, list) else [v], headers=["Id", "Name", "Value", "Type", "Mods Allowed", "Description"]))
 
 class CommandPrompt(Cmd):
     prompt = "> "
@@ -218,7 +222,7 @@ class CommandPrompt(Cmd):
                 if k in reader.samples:
                     value = reader.samples[k].data
 
-                r = [k, v.name, value, reader.sampleCounts[k], v.type, v.modsAllowed, v.desc]
+                r = [k, v.name, value, v.type, v.modsAllowed, v.desc]
                 l.append(r)
 
         return l
@@ -229,13 +233,8 @@ class CommandPrompt(Cmd):
       print(f"samples: {len(reader.samples)}")
 
     def do_serial(self, inp):
-      cmds = inp.split()
-      
-      # serial open /dev/ttyACM0 115200
-      if cmds[0] == 'open':
-        reader.serialConnect(cmds[1], cmds[2])
-      elif cmds[0] == 'close':
-        reader.ser.close()
+      if inp == 'connect':
+        reader.ser.
 
     def default(self, inp):
         if inp == "x" or inp == "q":
@@ -259,8 +258,6 @@ class CommandPrompt(Cmd):
             if len(groups) == 2:
                 name = groups[0]
                 value = groups[1]
-                
-              
 
             print("matched:", groups)
             print(match)

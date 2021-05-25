@@ -2,3 +2,5 @@ build/
 tools/configurator/build*
 __pycache__
 tools/telemetry/pystuff/
+tools/external/of*
+.env/

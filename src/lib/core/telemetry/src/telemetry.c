@@ -482,34 +482,30 @@ void telemetry_recv(uint8_t byte)
     if (byte == MARKER_BYTE)
       header.marker = byte;
     else if (header.marker == MARKER_BYTE)
-      recv_state = RECV_HEADER_TYPE;
+      header.type = byte;
+      recv_state = RECV_HEADER_SIZE;
 
-    break;
+      switch (header.type)
+      {
+      case PKT_DATA_MOD:
+        buffer = (uint8_t *)&payloads.dataFrame;
+        break;
 
-  case RECV_HEADER_TYPE:
-    header.type = byte;
-    recv_state = RECV_HEADER_SIZE;
+      case PKT_DATA_DESC_FRAME:
+        buffer = (uint8_t *)&payloads.dataDescFrame;
+        break;
 
-    switch (header.type)
-    {
-    case PKT_DATA_MOD:
-      buffer = (uint8_t *)&payloads.dataFrame;
-      break;
-
-    case PKT_DATA_DESC_FRAME:
-      buffer = (uint8_t *)&payloads.dataDescFrame;
-      break;
-
-    case PKT_NONE:
-    default:
-      recv_state = RECV_RESET;
-      break;
-    }
+      case PKT_NONE:
+      default:
+        recv_state = RECV_RESET;
+        break;
+      }
 
     break;
 
   case RECV_HEADER_SIZE:
     header.size = byte;
+    // todo: make sure header size and buffer size are exactly the same
     recv_state = RECV_PAYLOAD;
     offset = 0;
     break;
