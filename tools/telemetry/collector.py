@@ -289,7 +289,7 @@ class CommandPrompt(Cmd):
           'time': 0,
           'value':{
             'id': id,
-            'type': meta.type,
+            'type': telem.data_type.decmapping[meta.type],
             'data':val
           }
         }

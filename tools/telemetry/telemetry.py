@@ -151,6 +151,7 @@ data_type = Enum(Byte,
   Tdt_u32=7,
   Tdt_f32=8)
 
+
 mod_type = FlagsEnum(Byte,
   Tdm_read = 0x01,
   Tdm_write= 0x02,
