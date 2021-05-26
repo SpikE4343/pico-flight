@@ -18,7 +18,6 @@ from cmd import Cmd
 setre = re.compile("(.*?)\s*=\s*(\d+|true|false)")
 cmd_quit = "quit"
 commands = queue.Queue()
-
 class SerialReader(packet.Reader):
   def __init__(self, serial) -> None:
       super().__init__()
@@ -41,6 +40,7 @@ class SerialWriter(packet.Writer):
     self.serial = serial
     
   def write(self, data):
+    print('w:', data)
     self.serial.write(data)  
 
 
@@ -233,7 +233,13 @@ class CommandPrompt(Cmd):
       
       # serial open /dev/ttyACM0 115200
       if cmds[0] == 'open':
-        reader.serialConnect(cmds[1], cmds[2])
+        if len(cmds) > 2:
+          reader.serialConnect(cmds[1], cmds[2])
+        elif len(cmds) > 1:
+          reader.serialConnect(cmds[1], 115200)
+        else:
+          reader.serialConnect('/dev/ttyACM0', 115200)
+          
       elif cmds[0] == 'close':
         reader.ser.close()
 
@@ -260,15 +266,38 @@ class CommandPrompt(Cmd):
                 name = groups[0]
                 value = groups[1]
                 
-              
-
-            print("matched:", groups)
-            print(match)
+                self.setDataValue(name, value)
             return
 
         self.do_list(command)
         # all failed so search current sample desc for names contain command
         
+    def setDataValue(self, name, value):
+      if not (name in reader.sampleNames):
+        return
+      
+      id = reader.sampleNames[name]
+      
+      meta = reader.descriptions[id]
+      
+      val = float(value) if meta.type == 8 else int(value)
+      print('val', val, 't:', meta.type)
+      frame = {
+        'id': 0,
+        'mod': {
+          'type': 2,
+          'time': 0,
+          'value':{
+            'id': id,
+            'type': meta.type,
+            'data':val
+          }
+        }
+      }
+      
+      reader.packetizer.sender.send(telem.MsgTypes.MOD, frame)
+      
+      
     def emptyline(self):
       self.do_list("")
   

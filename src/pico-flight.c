@@ -19,6 +19,9 @@ int main()
 #if USING_PICO_PROBE
   gpio_set_function(16, GPIO_FUNC_UART);
   gpio_set_function(17, GPIO_FUNC_UART);
+
+
+  uart_set_fifo_enabled(uart0, true);
 #endif
 
   // for (int a = 0; a < 3; ++a)

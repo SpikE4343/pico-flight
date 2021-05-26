@@ -301,20 +301,25 @@ class Sender(packet.Sender):
       super().__init__(handlers)
       
   def serialize(self, writer, type, payload):
-    writer.write(MARKER_BYTE)
-    writer.write(type)
     size = 0
     for b in payload:
       if size == 0:
         crc = b
-        continue
-      
-      crc ^= b
+      else:
+        crc ^= b
+        
       size += 1
-
-    writer.write(size)
-    writer.write(payload)
-    writer.write(crc)
+    
+    d = bytearray(
+      [MARKER_BYTE,
+       type,
+       size]
+    )
+    
+    d.extend(payload)
+    d.append(crc)
+      
+    writer.write(d)
     
     
 

@@ -9,14 +9,19 @@ class Sender:
     if not type in self.handlers:
       return
     
-    self.queue.put((type,self.handlers[type].build(payload)))
+    try:
+      item = (type,self.handlers[type].build(payload))
+      self.queue.put(item)
+    except Exception as e:
+      print(e)
   
   def serialize(self, type, payload):
     pass
   
   def update(self, writer):
     while not self.queue.empty():
-      self.serialize(writer, self.queue.get())
+      item = self.queue.get()
+      self.serialize(writer, type=item[0], payload=item[1])
       
 
       

@@ -412,6 +412,14 @@ void __time_critical_func(telemetry_send)(uint64_t start, uint64_t now)
 
   uint32_t delta = timer_hw->timelr - tdv_telemetry_update_us.v.u32;
   tdv_telemetry_update_us.v.u32 = delta;
+
+
+  int max = 64;
+  while(uart_is_readable(uart0) && max-- > 0)
+  {
+    uint8_t rd = uart_getc(uart0);
+    telemetry_recv(rd);
+  }
 }
 
 typedef enum
@@ -476,12 +484,16 @@ void telemetry_recv(uint8_t byte)
     recv_state = RECV_MARKER;
     crc = 0;
     offset = 0;
+    telemetry_recv(byte);
     break;
 
   case RECV_MARKER:
     if (byte == MARKER_BYTE)
+    {
       header.marker = byte;
+    }
     else if (header.marker == MARKER_BYTE)
+    {
       header.type = byte;
       recv_state = RECV_HEADER_SIZE;
 
@@ -500,7 +512,7 @@ void telemetry_recv(uint8_t byte)
         recv_state = RECV_RESET;
         break;
       }
-
+    }
     break;
 
   case RECV_HEADER_SIZE:
