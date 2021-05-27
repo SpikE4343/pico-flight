@@ -21,4 +21,7 @@ DECL_EXTERN_DV_ARRAY(tdv_fc_rates_raw);
 DECL_EXTERN_DV_ARRAY(tdv_fc_rates_filtered);
 
 
+DECL_EXTERN_DV_ARRAY(tdv_fc_inputs);
+
+
 #endif

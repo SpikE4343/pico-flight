@@ -15,7 +15,7 @@ import packet
 
 from cmd import Cmd
 
-setre = re.compile("(.*?)\s*=\s*(\d+|true|false)")
+setre = re.compile("(.*?)\s*=\s*([-+]*\d+[.]\d+|\d+|true|false)")
 cmd_quit = "quit"
 commands = queue.Queue()
 class SerialReader(packet.Reader):
@@ -265,6 +265,8 @@ class CommandPrompt(Cmd):
             if len(groups) == 2:
                 name = groups[0]
                 value = groups[1]
+                
+                print(groups)
                 
                 self.setDataValue(name, value)
             return

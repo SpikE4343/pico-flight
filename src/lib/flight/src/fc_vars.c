@@ -102,4 +102,12 @@ BEGIN_DEF_DV_ARRAY( tdv_fc_rates_filtered )
 END_DEF_DV_ARRAY();
 
 
+BEGIN_DEF_DV_ARRAY( tdv_fc_inputs )
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "fc.input.roll", "Roll input", f32, Tdm_RW),
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "fc.input.pitch", "Pitch input", f32, Tdm_RW),
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "fc.input.yaw", "Yaw input", f32, Tdm_RW),
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "fc.input.throttle", "Throttle input", f32, Tdm_RW)
+END_DEF_DV_ARRAY();
+
+
 

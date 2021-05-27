@@ -42,7 +42,7 @@ void motorMixerCalculateOutputs(TDataVar_t *input, TDataVar_t *output)
     ty = input[2].v.f32 * mix[2].v.f32;
     tt = input[3].v.f32 * mix[3].v.f32;
 
-    temp = (tr+tp)+ ty;
+    temp = (tr+tp)+ ty+tt;
   
     tempOut[m] = temp;
 
@@ -103,3 +103,9 @@ BEGIN_DEF_DV_ARRAY( tdv_motor3_mix )
   DEF_DV_ARRAY_ITEM(3, 1.0f, motor3_mapping_name, motor_mapping_desc, f32, Tdm_RW | Tdm_config),
 END_DEF_DV_ARRAY();
 
+BEGIN_DEF_DV_ARRAY( tdv_mixer_input )
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "mixer.input.roll", "Normalized motor throttle value sent to mixer", f32, Tdm_RW),
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "mixer.input.pitch", "Normalized motor throttle value sent to mixer", f32, Tdm_RW),
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "mixer.input.yaw", "Normalized motor throttle value sent to mixer", f32, Tdm_RW),
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "mixer.input.throttle", "Normalized motor throttle value sent to mixer", f32, Tdm_RW)
+END_DEF_DV_ARRAY();

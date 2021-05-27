@@ -219,6 +219,12 @@ void flightProcessInputs()
   //   state.r.controllerInputs[a] = state.r.controlInputs.values[a]; //applyBetaflightRates(a, value, fabsf(value));
   // }
 
+  // roll
+
+  tdv_fc_inputs[0].v.f32 = tdv_rc_input[tdv_rc_mapping[0].v.u8].v.f32;
+  tdv_fc_inputs[1].v.f32 = tdv_rc_input[tdv_rc_mapping[1].v.u8].v.f32;
+  tdv_fc_inputs[2].v.f32 = tdv_rc_input[tdv_rc_mapping[2].v.u8].v.f32;
+  tdv_fc_inputs[3].v.f32 = tdv_rc_input[tdv_rc_mapping[3].v.u8].v.f32;
   // // printf("[% 1.3f, % 1.3f, % 1.3f, % 1.3f, % 1.3f, %u]\n",
   // //        state.r.controlInputs.values[INPUT_CONTROL_PITCH],
   // //        state.r.controlInputs.values[INPUT_CONTROL_ROLL],
@@ -233,7 +239,7 @@ void flightProcessInputs()
 
 void flightControlUpdate()
 {
-  // flightProcessInputs();
+  flightProcessInputs();
   //state.r.motorOutputs.disarmed = true;
   uint32_t next = tdv_fc_state.v.u32;
 
@@ -317,8 +323,9 @@ void flightControlUpdate()
     telemetry_sample(&tdv_fc_state);
   }
 
-  // motorMixerCalculateOutputs(&state.r.motorInputs, tdv_motor_output);
-  // motorOutputSet(tdv_motor_output);
+
+  motorMixerCalculateOutputs(tdv_fc_inputs, tdv_motor_output);
+  motorOutputSet(tdv_motor_output);
 
   ++tdv_fc_control_updates.v.u32;
 }

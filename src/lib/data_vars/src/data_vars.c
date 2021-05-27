@@ -45,6 +45,8 @@ void fc_vars_init()
 
   telemetry_register_array(tdv_fc_rates_raw, 3);
   telemetry_register_array(tdv_fc_rates_filtered, 3);
+
+  telemetry_register_array(tdv_fc_inputs, 4);
 }
 
 void motor_common_init()
@@ -59,6 +61,8 @@ void motor_mixer_init()
   telemetry_register_array(tdv_motor1_mix, 4);
   telemetry_register_array(tdv_motor2_mix, 4);
   telemetry_register_array(tdv_motor3_mix, 4);
+
+  telemetry_register_array( tdv_mixer_input, 4 );
 }
 
 void motor_output_init()
