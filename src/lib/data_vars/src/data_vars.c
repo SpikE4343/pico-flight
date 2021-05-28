@@ -47,6 +47,24 @@ void fc_vars_init()
   telemetry_register_array(tdv_fc_rates_filtered, 3);
 
   telemetry_register_array(tdv_fc_inputs, 4);
+  telemetry_register_array(tdv_fc_attitude_outputs, 4);
+
+  telemetry_register_array(tdv_fc_pidf_k_roll, 4);
+  telemetry_register_array(tdv_fc_pidf_k_pitch, 4);
+  telemetry_register_array(tdv_fc_pidf_k_yaw, 4);
+
+  telemetry_register_array(tdv_fc_pidf_v_roll, 4);
+  telemetry_register_array(tdv_fc_pidf_v_pitch, 4);
+  telemetry_register_array(tdv_fc_pidf_v_yaw, 4);
+
+
+  telemetry_register_array(tdv_fc_pid_sum, 3);
+  telemetry_register_array(tdv_fc_pid_sp, 3);
+  telemetry_register_array(tdv_fc_pid_sp_error, 3);
+
+  telemetry_register_array(tdv_fc_pid_sp_delta, 3);
+  telemetry_register_array(tdv_fc_pid_pv_error, 3);
+  telemetry_register_array(tdv_fc_pid_pv, 3);
 }
 
 void motor_common_init()
@@ -69,11 +87,13 @@ void motor_output_init()
 {
   telemetry_register_array(tdv_motor_output, 4);
   telemetry_register_array(tdv_motor_output_pin, 4);
+  telemetry_register_array(tdv_motor_out_cmd, 4);
 
   telemetry_register(&tdv_motor_startup_delay_ms);
   telemetry_register(&tdv_motor_output_min);
   telemetry_register(&tdv_motor_output_idle);
   telemetry_register(&tdv_motor_output_max);
+  telemetry_register(&tdv_motor_output_enabled);
   telemetry_register(&tdv_motor_output_rate);
 }
 
@@ -91,6 +111,10 @@ void rc_vars_init()
   telemetry_register(&tdv_rc_rssi);
   telemetry_register(&tdv_rc_packet_loss);
   telemetry_register(&tdv_rc_recv_state);
+  
+  telemetry_register(&tdv_rc_uart_rx_bytes);
+  telemetry_register(&tdv_rc_uart_tx_bytes);
+  
 
   telemetry_register_array(tdv_rc_mapping, 8);
   telemetry_register_array(tdv_rc_input, 32);

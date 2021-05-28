@@ -189,6 +189,7 @@ int readData(int max)
   {
     uint8_t data = uart_getc(s.uart);
     ++read;
+    ++tdv_rc_uart_pins_rx.v.u32;
     buffer_write(data);
   }
 
@@ -211,7 +212,6 @@ void print_packet()
 
 void inputRxUpdate()
 {
-
   readData(BUFFER_SIZE - s.rx.length);
 
   while (!buffer_empty())

@@ -51,6 +51,16 @@ DEF_DATA_VAR(tdv_rc_recv_state, 0,
   "Baud rate to use for rc communication",
   u8, Tdm_RW);
 
+DEF_DATA_VAR(tdv_rc_uart_rx_bytes, 0,
+  "rc.uart.rx",
+  "Bytes read from rc uart",
+  u32, Tdm_RW);
+
+DEF_DATA_VAR(tdv_rc_uart_tx_bytes, 0,
+  "rc.uart.tx",
+  "Bytes sent to rc uart",
+  u32, Tdm_RW);
+
 #define rc_control_name "rc.input"
 #define rc_control_desc "RC control normalized inputs"
 

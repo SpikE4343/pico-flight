@@ -17,12 +17,10 @@
 #define PID_D 2
 #define PID_F 3
 
-typedef struct
-{
-  float PID[3][4];
-} FlightPIDControllerConfig_t;
 
-void flightAttitudePIDInit(FlightPIDControllerConfig_t *info);
-Vector4f_t flightAttitudeUpdate(Vector4f_t inputs, Vector3f_t gyro, float dT);
+void flightAttitudeInit();
+void flightAttitudeUpdate(TDataVar_t* outputs, TDataVar_t* inputs, TDataVar_t* gyro, float dT);
+
+
 
 #endif

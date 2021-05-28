@@ -29,7 +29,6 @@ static MotorOutputState_t s;
 //
 
 uint8_t dshotPacketBitPlanes[DSHOT_PACKET_SIZE_BITS];
-DshotPacket_t dshotPackets[MAX_MOTORS];
 
 void dshot_update_bitplanes(uint8_t *bitPlane, DshotPacket_t *packets)
 {
@@ -49,15 +48,6 @@ void dshot_update_bitplanes(uint8_t *bitPlane, DshotPacket_t *packets)
       uint8_t isset = (value & bit_mask) ? 1 : 0;
 
       bitPlane[bitCount - 1 - b] |= isset << (p);
-
-      // printf("p[%u] = %04X, m=%04X, bit[%u]: isset=%02X, final[%02X]=%02X \n",
-      //     p,
-      //     value,
-      //     bit_mask,
-      //     b,
-      //     isset,
-      //     bitCount-1-b,
-      //     bitPlane[bitCount-1-b] );
     }
   }
 }
@@ -70,10 +60,8 @@ static void dma_init(PIO pio, uint sm)
   // main DMA channel outputs 8 word fragments, and then chains back to the chain channel
   dma_channel_config c = dma_channel_get_default_config(s.dmaId);
   channel_config_set_dreq(&c, pio_get_dreq(pio, sm, true));
-  //channel_config_set_irq_quiet(&channel_config, false);
   channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
   channel_config_set_read_increment(&c, true);
-  //channel_config_set_ring(&channel_config, false, 4);
   dma_channel_configure(
       s.dmaId,
       &c,
@@ -89,7 +77,6 @@ void motorOutputInit()
   printf("motor init begin\n");
 
 
-  memset(dshotPackets, 0, sizeof(dshotPackets));
   memset(dshotPacketBitPlanes, 0, sizeof(dshotPacketBitPlanes));
 
   PIO pio = pio0;
@@ -102,37 +89,30 @@ void motorOutputInit()
   printf("motor init end\n");
 }
 
-void motorOutputSet(TDataVar_t *output)
+void motorOutputSet(bool enabled, TDataVar_t *output)
 {
-  //printf("motor output set, %u\n", DSHOT_PACKET_SIZE_BITS);
+  DshotPacket_t packets[MOTOR_MAX_OUTPUT];
+  memset(packets, 0, sizeof(packets));
 
-  uint16_t idle = (uint16_t)(tdv_motor_output_idle.v.f32*MOTOR_MAX_OUTPUT);
-
-  for (int m = 0; m < MAX_MOTORS; ++m)
+  if( enabled )
   {
-    uint16_t motorValue = math_clamp(
-      MOTOR_MIN_OUTPUT, 
-      (uint16_t)( idle + output[m].v.f32 * MOTOR_MAX_OUTPUT),
-      MOTOR_MAX_OUTPUT
-    );
+    uint16_t idle = (uint16_t)(tdv_motor_output_idle.v.f32*MOTOR_MAX_OUTPUT);
 
-    dshotPackets[m] = dshotBuildPacket(motorValue); // & ~output->disarmed);
+    for (int m = 0; m < MAX_MOTORS; ++m)
+    {
+      uint16_t motorValue = math_clamp(
+        MOTOR_MIN_OUTPUT, 
+        (uint16_t)( idle + output[m].v.f32 * MOTOR_MAX_OUTPUT),
+        MOTOR_MAX_OUTPUT
+      );
 
-    // printf("[%u, %04X] ", motorValue, dshotPackets[m].value);
+      packets[m] = dshotBuildPacket(motorValue);
+      tdv_motor_out_cmd[m].v.u16 = packets[m].throttle;
+    }
   }
 
-  // printf("\n");
+  dshot_update_bitplanes(dshotPacketBitPlanes, packets);
 
-  dshot_update_bitplanes(dshotPacketBitPlanes, dshotPackets);
-
-  // for(int m=0; m < DSHOT_PACKET_SIZE_BITS; ++m)
-  // {
-  //   printf("%02X ", dshotPacketBitPlanes[m]);
-  // }
-
-  // printf("\n");
-
-  //assert(!dma_channel_is_busy(DMA_CHANNEL));
   dma_channel_hw_addr(s.dmaId)->al1_read_addr = (uintptr_t)dshotPacketBitPlanes;
   dma_channel_hw_addr(s.dmaId)->al1_transfer_count_trig = DSHOT_PACKET_SIZE_BITS;
 }

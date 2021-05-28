@@ -119,8 +119,8 @@ void flightCore1()
 
   motorCommonInit();
   motorMixerInit();
+  flightAttitudeInit();
   motorOutputInit();
-  //flightAttitudePIDInit(&config->attitude);
   gyroInit();
 
   state.lpfAlpha = lpfAlpha(
@@ -270,6 +270,11 @@ void flightControlUpdate()
       break;
     }
 
+    flightAttitudeUpdate(
+      tdv_fc_attitude_outputs, 
+      tdv_fc_inputs, 
+      tdv_fc_rates_filtered, 
+      1.0f / tdv_fc_update_rate_hz.v.u32);
     //state.r.motorOutputs.disarmed = false;
 
     //state.r.motorInputs = state.r.controllerInputs;
@@ -288,6 +293,11 @@ void flightControlUpdate()
     break;
 
   case FC_STATE_DISARMED:
+    tdv_fc_inputs[0].v.f32 = tdv_fc_attitude_outputs[0].v.f32 = 0.0f;
+    tdv_fc_inputs[1].v.f32 = tdv_fc_attitude_outputs[1].v.f32 = 0.0f;
+    tdv_fc_inputs[2].v.f32 = tdv_fc_attitude_outputs[2].v.f32 = 0.0f;
+    tdv_fc_inputs[3].v.f32 = tdv_fc_attitude_outputs[3].v.f32 = 0.0f;
+
     if (bool8v(tdv_fc_armed) && !bool8v(tdv_rc_failsafe) && !bool8v(tdv_rc_signal_lost))
     {
       next = FC_STATE_ARMED;
@@ -323,9 +333,8 @@ void flightControlUpdate()
     telemetry_sample(&tdv_fc_state);
   }
 
-
-  motorMixerCalculateOutputs(tdv_fc_inputs, tdv_motor_output);
-  motorOutputSet(tdv_motor_output);
+  motorMixerCalculateOutputs(tdv_fc_attitude_outputs, tdv_motor_output);
+  motorOutputSet(tdv_fc_armed.v.b8 & tdv_motor_output_enabled.v.b8, tdv_motor_output);
 
   ++tdv_fc_control_updates.v.u32;
 }
@@ -380,6 +389,7 @@ void flightPrintTask()
   telemetry_sample_array(tdv_fc_rates_raw, 3);
   telemetry_sample_array(tdv_fc_rates_filtered, 3);
   telemetry_sample_array(tdv_motor_output, tdv_motor_count.v.u32);
+  telemetry_sample_array(tdv_motor_out_cmd, tdv_motor_count.v.u32);
 
   //telemetry_sample_array(tdv_motor_output, tdv_motor_count.v.u8);
 
@@ -392,8 +402,28 @@ void flightPrintTask()
 
   telemetry_sample(&tdv_fc_gyro_update_us);
 
+  telemetry_sample_array(&tdv_fc_attitude_outputs, 4);
+  telemetry_sample_array(&tdv_fc_inputs, 4);
+
+  telemetry_sample_array(&tdv_fc_pidf_v_roll, 4);
+  telemetry_sample_array(&tdv_fc_pidf_v_pitch, 4);
+  telemetry_sample_array(&tdv_fc_pidf_v_yaw, 4);
+
+  telemetry_sample_array(&tdv_fc_pid_sum, 3);
+  telemetry_sample_array(&tdv_fc_pid_sp, 3);
+  telemetry_sample_array(&tdv_fc_pid_sp_error, 3);
+  telemetry_sample_array(&tdv_fc_pid_sp_delta, 3);
+  telemetry_sample_array(&tdv_fc_pid_pv_error, 3);
+  telemetry_sample_array(&tdv_fc_pid_pv, 3);
+
+  telemetry_sample(&tdv_rc_uart_rx_bytes);
+  telemetry_sample(&tdv_rc_uart_tx_bytes);
+
   tdv_fc_core0_counter.v.u32 = 0;
   tdv_fc_core1_counter.v.u32 = 0;
+
+  tdv_rc_uart_rx_bytes.v.u32 = 0;
+  tdv_rc_uart_tx_bytes.v.u32 = 0;
 
   
   telemetry_send(state.startupMs, time);

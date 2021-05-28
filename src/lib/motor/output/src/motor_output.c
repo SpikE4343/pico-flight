@@ -7,10 +7,18 @@
 
 
 BEGIN_DEF_DV_ARRAY(tdv_motor_output)
-  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "motor.0.output", "Normalized motor throttle value sent to mixer", f32, Tdm_RW),
-  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "motor.1.output", "Normalized motor throttle value sent to mixer", f32, Tdm_RW),
-  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "motor.2.output", "Normalized motor throttle value sent to mixer", f32, Tdm_RW),
-  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "motor.3.output", "Normalized motor throttle value sent to mixer", f32, Tdm_RW)
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "motor.0.out", "Normalized motor throttle value sent to mixer", f32, Tdm_RW),
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "motor.1.out", "Normalized motor throttle value sent to mixer", f32, Tdm_RW),
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "motor.2.out", "Normalized motor throttle value sent to mixer", f32, Tdm_RW),
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "motor.3.out", "Normalized motor throttle value sent to mixer", f32, Tdm_RW)
+END_DEF_DV_ARRAY();
+
+
+BEGIN_DEF_DV_ARRAY(tdv_motor_out_cmd)
+  DEF_DV_ARRAY_ITEM_NAMED(0, "motor.0.out.cmd", "Native motor throttle value sent to esc", u16, Tdm_RW),
+  DEF_DV_ARRAY_ITEM_NAMED(0, "motor.1.out.cmd", "Native motor throttle value sent to esc", u16, Tdm_RW),
+  DEF_DV_ARRAY_ITEM_NAMED(0, "motor.2.out.cmd", "Native motor throttle value sent to esc", u16, Tdm_RW),
+  DEF_DV_ARRAY_ITEM_NAMED(0, "motor.3.out.cmd", "Native motor throttle value sent to esc", u16, Tdm_RW)
 END_DEF_DV_ARRAY();
 
 BEGIN_DEF_DV_ARRAY(tdv_motor_output_pin)
@@ -35,6 +43,11 @@ DEF_DATA_VAR(tdv_motor_output_max, 1.0f,
              "motor.output.max",
              "Maximum motor output value scalar",
              f32, Tdm_RW | Tdm_config);
+
+DEF_DATA_VAR(tdv_motor_output_enabled, 0,
+             "motor.output.enabled",
+             "Enable or disable all motor output",
+             b8, Tdm_RW | Tdm_config);
 
 
 

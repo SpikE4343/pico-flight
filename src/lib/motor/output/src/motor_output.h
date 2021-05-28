@@ -20,7 +20,7 @@ typedef struct
 } MotorOutputValues_t;
 
 void motorOutputInit();
-void motorOutputSet(TDataVar_t *output);
+void motorOutputSet(bool enabled, TDataVar_t *output);
 
 
 #endif

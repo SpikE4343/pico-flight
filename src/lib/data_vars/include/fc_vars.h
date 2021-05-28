@@ -22,6 +22,22 @@ DECL_EXTERN_DV_ARRAY(tdv_fc_rates_filtered);
 
 
 DECL_EXTERN_DV_ARRAY(tdv_fc_inputs);
+DECL_EXTERN_DV_ARRAY(tdv_fc_attitude_outputs);
 
+DECL_EXTERN_DV_ARRAY(tdv_fc_pidf_k_roll);
+DECL_EXTERN_DV_ARRAY(tdv_fc_pidf_k_pitch);
+DECL_EXTERN_DV_ARRAY(tdv_fc_pidf_k_yaw);
+
+DECL_EXTERN_DV_ARRAY(tdv_fc_pidf_v_roll);
+DECL_EXTERN_DV_ARRAY(tdv_fc_pidf_v_pitch);
+DECL_EXTERN_DV_ARRAY(tdv_fc_pidf_v_yaw);
+
+DECL_EXTERN_DV_ARRAY(tdv_fc_pid_sum);
+DECL_EXTERN_DV_ARRAY(tdv_fc_pid_sp);
+DECL_EXTERN_DV_ARRAY(tdv_fc_pid_sp_error);
+
+DECL_EXTERN_DV_ARRAY(tdv_fc_pid_sp_delta);
+DECL_EXTERN_DV_ARRAY(tdv_fc_pid_pv_error);
+DECL_EXTERN_DV_ARRAY(tdv_fc_pid_pv);
 
 #endif

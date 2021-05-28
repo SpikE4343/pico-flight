@@ -110,4 +110,12 @@ BEGIN_DEF_DV_ARRAY( tdv_fc_inputs )
 END_DEF_DV_ARRAY();
 
 
+BEGIN_DEF_DV_ARRAY( tdv_fc_attitude_outputs )
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "fc.at.out.roll", "Roll attitude output", f32, Tdm_RW),
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "fc.at.out.pitch", "Pitch attitude output", f32, Tdm_RW),
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "fc.at.out.yaw", "Yaw attitude output", f32, Tdm_RW),
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "fc.at.out.throttle", "Throttle attitude output", f32, Tdm_RW)
+END_DEF_DV_ARRAY();
+
+
 

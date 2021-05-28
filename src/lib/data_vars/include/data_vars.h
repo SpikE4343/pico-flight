@@ -39,12 +39,17 @@ DECL_EXTERN_DATA_VAR( tdv_motor_startup_delay_ms );
 
 // motor_output
 DECL_EXTERN_DV_ARRAY( tdv_motor_output) ;
+DECL_EXTERN_DV_ARRAY( tdv_motor_out_cmd) ;
 DECL_EXTERN_DV_ARRAY( tdv_motor_output_pin );
 
 DECL_EXTERN_DATA_VAR( tdv_motor_output_min );
 DECL_EXTERN_DATA_VAR( tdv_motor_output_idle );
 DECL_EXTERN_DATA_VAR( tdv_motor_output_max );
+DECL_EXTERN_DATA_VAR( tdv_motor_output_enabled );
+
+
 DECL_EXTERN_DATA_VAR( tdv_motor_output_rate );
+
 
 
 //osd
