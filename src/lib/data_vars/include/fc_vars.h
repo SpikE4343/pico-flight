@@ -13,6 +13,8 @@ DECL_EXTERN_DATA_VAR(tdv_fc_core1_counter);
 DECL_EXTERN_DATA_VAR(tdv_fc_gyro_update_us);
 
 DECL_EXTERN_DATA_VAR(tdv_fc_telemetry_rate_hz);
+DECL_EXTERN_DATA_VAR(tdv_fc_failsafe_rx_loss_ms);
+
 DECL_EXTERN_DATA_VAR(tdv_fc_update_rate_hz);
 
 DECL_EXTERN_DATA_VAR(tdv_fc_armed);  

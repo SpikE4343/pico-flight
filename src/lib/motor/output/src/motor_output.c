@@ -7,18 +7,18 @@
 
 
 BEGIN_DEF_DV_ARRAY(tdv_motor_output)
-  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "motor.0.out", "Normalized motor throttle value sent to mixer", f32, Tdm_RW),
-  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "motor.1.out", "Normalized motor throttle value sent to mixer", f32, Tdm_RW),
-  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "motor.2.out", "Normalized motor throttle value sent to mixer", f32, Tdm_RW),
-  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "motor.3.out", "Normalized motor throttle value sent to mixer", f32, Tdm_RW)
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "motor.0.out.v", "Normalized motor throttle value sent to mixer", f32, Tdm_RW | Tdm_realtime),
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "motor.1.out.v", "Normalized motor throttle value sent to mixer", f32, Tdm_RW | Tdm_realtime),
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "motor.2.out.v", "Normalized motor throttle value sent to mixer", f32, Tdm_RW | Tdm_realtime),
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "motor.3.out.v", "Normalized motor throttle value sent to mixer", f32, Tdm_RW | Tdm_realtime)
 END_DEF_DV_ARRAY();
 
 
 BEGIN_DEF_DV_ARRAY(tdv_motor_out_cmd)
-  DEF_DV_ARRAY_ITEM_NAMED(0, "motor.0.out.cmd", "Native motor throttle value sent to esc", u16, Tdm_RW),
-  DEF_DV_ARRAY_ITEM_NAMED(0, "motor.1.out.cmd", "Native motor throttle value sent to esc", u16, Tdm_RW),
-  DEF_DV_ARRAY_ITEM_NAMED(0, "motor.2.out.cmd", "Native motor throttle value sent to esc", u16, Tdm_RW),
-  DEF_DV_ARRAY_ITEM_NAMED(0, "motor.3.out.cmd", "Native motor throttle value sent to esc", u16, Tdm_RW)
+  DEF_DV_ARRAY_ITEM_NAMED(0, "motor.0.out.cmd", "Native motor throttle value sent to esc", u16, Tdm_RW | Tdm_realtime),
+  DEF_DV_ARRAY_ITEM_NAMED(0, "motor.1.out.cmd", "Native motor throttle value sent to esc", u16, Tdm_RW | Tdm_realtime),
+  DEF_DV_ARRAY_ITEM_NAMED(0, "motor.2.out.cmd", "Native motor throttle value sent to esc", u16, Tdm_RW | Tdm_realtime),
+  DEF_DV_ARRAY_ITEM_NAMED(0, "motor.3.out.cmd", "Native motor throttle value sent to esc", u16, Tdm_RW | Tdm_realtime)
 END_DEF_DV_ARRAY();
 
 BEGIN_DEF_DV_ARRAY(tdv_motor_output_pin)

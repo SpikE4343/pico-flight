@@ -6,9 +6,10 @@
 #include "motor_output.h"
 #include "motor_output_dshot.h"
 
-uint8_t dshotPacketCrc(DshotPacket_t packet)
+// ---------------------------------------------------------------
+uint8_t dshotPacketCrc(uint16_t packet)
 {
-  unsigned chk = packet.value;
+  unsigned chk = packet;
   unsigned sum = 0;
 
   for (int i = 0; i < 3; ++i)
@@ -20,12 +21,14 @@ uint8_t dshotPacketCrc(DshotPacket_t packet)
   return sum & 0xF;
 }
 
+// ---------------------------------------------------------------
 DshotPacket_t dshotBuildPacket(uint16_t throttle)
 {
   DshotPacket_t packet;
+  packet.value = 0;
   packet.throttle = throttle;
   packet.telemetryReq = 0;
-  packet.crc = dshotPacketCrc(packet);
+  packet.crc = dshotPacketCrc(throttle << 1 | packet.telemetryReq);
   return packet;
 }
 

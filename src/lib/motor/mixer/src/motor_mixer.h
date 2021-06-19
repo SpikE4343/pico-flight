@@ -5,7 +5,7 @@
 #include "motor_common.h"
 
 void motorMixerInit();
-void motorMixerCalculateOutputs(TDataVar_t *input, TDataVar_t *output);
+void motorMixerCalculateOutputs(TDataVar_t *input, TDataVar_t *output, uint8_t motorCount);
 
 
 #endif

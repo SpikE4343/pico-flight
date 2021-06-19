@@ -6,6 +6,9 @@ add_executable(pico-flight
 target_link_libraries(pico-flight 
     pico_stdlib
     flight
+    core-system-rp2040
+    core-telemetry-rp2040
+    motor-output-dshot-rp2040-pio
 )
 
 add_subdirectory(lib)

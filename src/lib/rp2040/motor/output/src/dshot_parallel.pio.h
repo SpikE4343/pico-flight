@@ -15,15 +15,15 @@
 #define dshot_parallel_wrap_target 0
 #define dshot_parallel_wrap 3
 
-#define dshot_parallel_T1 2
-#define dshot_parallel_T2 5
+#define dshot_parallel_T1 3
+#define dshot_parallel_T2 3
 #define dshot_parallel_T3 3
 
 static const uint16_t dshot_parallel_program_instructions[] = {
             //     .wrap_target
     0x6028, //  0: out    x, 8                       
-    0xa10b, //  1: mov    pins, !null            [1] 
-    0xa401, //  2: mov    pins, x                [4] 
+    0xa20b, //  1: mov    pins, !null            [2] 
+    0xa201, //  2: mov    pins, x                [2] 
     0xa103, //  3: mov    pins, null             [1] 
             //     .wrap
 };

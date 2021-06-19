@@ -15,26 +15,28 @@ TDataVar_t* mmixes[] = {
   &tdv_motor3_mix[0]
 };
 
+// ---------------------------------------------------------------
 void motorMixerInit()
 {
   printf("mixer init\n");
 
 }
 
+// ---------------------------------------------------------------
 int motorHasValue(float val)
 {
   return (abs(val) >= 0.2f);
 }
 
-
-void motorMixerCalculateOutputs(TDataVar_t *input, TDataVar_t *output)
+// ---------------------------------------------------------------
+void motorMixerCalculateOutputs(TDataVar_t *input, TDataVar_t *output, uint8_t motorCount)
 {
   int m = 0, c = 0;
   float tempOut[4];
   float tr = 0.0f, tp = 0.0f, ty = 0.0f, tt = 0.0f;
   float temp = 1.0f, min = 2.0f, max = -2.0f, scaled = 0.0f;
 
-  for (m = 0; m < tdv_motor_count.v.u8; ++m)
+  for (m = 0; m < motorCount; ++m)
   {
     TDataVar_t* mix = mmixes[m];
     tr = input[0].v.f32 * mix[0].v.f32;
@@ -52,23 +54,20 @@ void motorMixerCalculateOutputs(TDataVar_t *input, TDataVar_t *output)
 
   float range = (max - min);
   
-
   // only normalize if we are saturating atleast one motor
   range = fmax(range, 1.0);
 
   float normMin = min /range;
   float normMax = max / range;
 
-  for (m = 0; m < tdv_motor_count.v.u8; ++m)
+  for (m = 0; m < motorCount; ++m)
   {
     TDataVar_t* mix = mmixes[m];
-    
-    output[m].v.f32 = (tempOut[m] / range);
-    // tempOut[m] = fixed_add(tempOut[m], normMax);
-    // output[m] = fixed_sub( tempOut[m], normMin);
+    output[m].v.f32 =  math_clamp(0.0f, tempOut[m], 1.0f);
   }
 }
 
+// ---------------------------------------------------------------
 #define motor0_mapping_name "motor.0.mix"
 #define motor1_mapping_name "motor.1.mix"
 #define motor2_mapping_name "motor.2.mix"

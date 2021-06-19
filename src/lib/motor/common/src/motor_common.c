@@ -13,10 +13,10 @@ void motorCommonInit()
 #define motor_direction_name "motor_direction"
 #define motor_direction_desc "Motor direction value"
 BEGIN_DEF_DV_ARRAY( tdv_motor_direction )
-  DEF_DV_ARRAY_ITEM(0, 1, motor_direction_name, motor_direction_desc, u8, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM(1, 1, motor_direction_name, motor_direction_desc, u8, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM(2, 1, motor_direction_name, motor_direction_desc, u8, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM(3, 1, motor_direction_name, motor_direction_desc, u8, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM_NAMED(1, "motor.0.dir", motor_direction_desc, u8, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM_NAMED(1, "motor.1.dir", motor_direction_desc, u8, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM_NAMED(1, "motor.2.dir", motor_direction_desc, u8, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM_NAMED(1, "motor.3.dir", motor_direction_desc, u8, Tdm_RW | Tdm_config),
 END_DEF_DV_ARRAY();
 
 DEF_DATA_VAR(tdv_motor_count, 4, 

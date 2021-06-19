@@ -1,11 +1,4 @@
-/* SPI Slave example, sender (uses SPI master driver)
 
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -23,12 +16,14 @@
 
 typedef spi_inst_t *spi_t;
 
+// ---------------------------------------------------------------
 typedef struct 
 {
   uint8_t id;
   uint8_t mask;
 } GyroDma_t;
 
+// ---------------------------------------------------------------
 typedef struct
 {
   spi_t spi;
@@ -46,20 +41,36 @@ typedef struct
   Vector3i32_t rates;  
 
 } GyroLocalState_t;
-
-
 static GyroLocalState_t s;
+
+// ---------------------------------------------------------------
+typedef struct
+{
+  union
+  {
+    struct
+    {
+      uint8_t reg;
+      uint8_t data;
+    } __packed;
+
+    uint16_t value;
+  };
+
+} __packed GyroRegisterPacket_t;
 
 static uint8_t debug = 1;
 
 static void gyroUpdateState();
 
+// ---------------------------------------------------------------
 static inline void cs_select(int enable) {
     // asm volatile("nop \n nop \n nop");
     // gpio_put(s.gyro.config->spi.selectPin, enable);  // Active low
     // asm volatile("nop \n nop \n nop");
 }
 
+// ---------------------------------------------------------------
 static void __time_critical_func(dma_complete_handler)()
   
 {
@@ -80,6 +91,7 @@ static void __time_critical_func(dma_complete_handler)()
   gyroUpdate();
 }
 
+// ---------------------------------------------------------------
 static void __time_critical_func(gyro_data_ready_handler)(uint gpio, uint32_t events)
 {
   if (gpio != tdv_gyro_rdy_pin.v.u8 )
@@ -105,6 +117,7 @@ static void __time_critical_func(gyro_data_ready_handler)(uint gpio, uint32_t ev
   dma_start_channel_mask(s.dma_tx.mask | s.dma_rx.mask);
 }
 
+// ---------------------------------------------------------------
 static void dma_init()
 {
   // Grab some unused dma channels
@@ -175,6 +188,7 @@ static void dma_init()
   printf("gyro: dma init complete\n");
 }
 
+// ---------------------------------------------------------------
 void gyroReadDev(spi_t spi, uint8_t *tx_data, uint8_t *rx_data, int8_t len)
 {
   // cs_select(0);
@@ -190,21 +204,9 @@ void gyroReadDev(spi_t spi, uint8_t *tx_data, uint8_t *rx_data, int8_t len)
   // cs_select(1);
 }
 
-typedef struct
-{
-  union
-  {
-    struct
-    {
-      uint8_t reg;
-      uint8_t data;
-    } __packed;
 
-    uint16_t value;
-  };
 
-} __packed GyroRegisterPacket_t;
-
+// ---------------------------------------------------------------
 uint8_t gyroReadRegister(uint8_t reg)
 {
   GyroRegisterPacket_t tx = {reg | 0x80, 0x00};
@@ -223,6 +225,7 @@ uint8_t gyroReadRegister(uint8_t reg)
   return rx.data;
 }
 
+// ---------------------------------------------------------------
 void gyroWriteRegister(uint8_t reg, uint8_t data)
 {
   GyroRegisterPacket_t tx = {reg, data};
@@ -239,6 +242,7 @@ void gyroWriteRegister(uint8_t reg, uint8_t data)
   printf("\n");
 }
 
+// ---------------------------------------------------------------
 void gyroUpdateState()
 {
   int count = tdv_gyro_cal_samples.v.u32;
@@ -294,9 +298,6 @@ void gyroUpdateState()
       s.gyro.raw_rates.roll -= (int32_t)s.gyro.cal.zeroValue.roll;
       s.gyro.raw_rates.pitch -= (int32_t)s.gyro.cal.zeroValue.pitch;
       s.gyro.raw_rates.yaw -= (int32_t)s.gyro.cal.zeroValue.yaw;
-    // s.gyro.fixedRates[0].value = ((int32_t)s.gyro.raw_rates.roll) << 14;
-    // s.gyro.fixedRates[1].value = ((int32_t)s.gyro.raw_rates.pitch) << 14;
-    // s.gyro.fixedRates[2].value = ((int32_t)s.gyro.raw_rates.yaw) << 14;
     
       if(s.completeCallback)
         s.completeCallback();
@@ -309,6 +310,7 @@ void gyroUpdateState()
   }
 }
 
+// ---------------------------------------------------------------
 void gyroUpdate()
 {
   ++tdv_gyro_sample_count.v.u32;
@@ -316,16 +318,19 @@ void gyroUpdate()
   gyroUpdateState();
 }
 
+// ---------------------------------------------------------------
 void gyroSetUpdateCallback(gyro_update_complete_callback_t cb)
 {
   s.completeCallback = cb;
 }
 
+// ---------------------------------------------------------------
 GyroState_t *gyroState()
 {
   return &s.gyro;
 }
 
+// ---------------------------------------------------------------
 void gyroConfigure()
 {
   printf("gyro reset\n");
@@ -349,6 +354,7 @@ void gyroConfigure()
   printf("gyro configured\n");
 }
 
+// ---------------------------------------------------------------
 void gyroInit()
 {
   memset(&s, 0, sizeof(s));

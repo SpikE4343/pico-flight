@@ -1,8 +1,4 @@
-/**
- * Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
- *
- * SPDX-License-Identifier: BSD-3-Clause
- */
+
 #include "pico/stdlib.h"
 #include "hardware/pio.h"
 #include "hardware/dma.h"
@@ -77,6 +73,7 @@ typedef struct
 
 static OsdState_t s;
 
+// ---------------------------------------------------------------
 static void __time_critical_func(dma_complete_handler)()
 {
   if (dma_hw->ints0 & s.dmaMask)
@@ -91,6 +88,7 @@ static void __time_critical_func(dma_complete_handler)()
   }
 }
 
+// ---------------------------------------------------------------
 static void dma_init(PIO pio, uint sm)
 {
   s.dmaId = dma_claim_unused_channel(true);
@@ -146,7 +144,7 @@ static void dma_init(PIO pio, uint sm)
   dma_channel_set_irq0_enabled(s.dmaId, true);
 }
 
-
+// ---------------------------------------------------------------
 uint8_t line_bit_pattern(int pixel)
 {
   int counter = 0;
@@ -172,6 +170,7 @@ uint8_t line_bit_pattern(int pixel)
   return TVOUT_2BIT_SYNC;
 }
 
+// ---------------------------------------------------------------
 uint8_t vsync_field2_bit_pattern(int pixel)
 {
   int counter = 0;
@@ -195,6 +194,7 @@ uint8_t vsync_field2_bit_pattern(int pixel)
   return TVOUT_2BIT_SYNC;
 }
 
+// ---------------------------------------------------------------
 uint8_t vsync_field1_bit_pattern(int pixel)
 {
   int counter = 0;
@@ -218,6 +218,7 @@ uint8_t vsync_field1_bit_pattern(int pixel)
   return TVOUT_2BIT_SYNC;
 }
 
+// ---------------------------------------------------------------
 uint8_t vsync_half_norm_bit_pattern(int pixel)
 {
   int counter = 0;
@@ -229,6 +230,7 @@ uint8_t vsync_half_norm_bit_pattern(int pixel)
   return TVOUT_2BIT_BLANKING;
 }
 
+// ---------------------------------------------------------------
 uint8_t vsync_half_inv_bit_pattern(int pixel)
 {
   int counter = 0;
@@ -240,7 +242,7 @@ uint8_t vsync_half_inv_bit_pattern(int pixel)
   return TVOUT_2BIT_BLANKING;
 }
 
-
+// ---------------------------------------------------------------
 void initLine(int l)
 {
   s.frameBuffer[l] = line_bit_pattern(l % LINE_SIZE );
@@ -248,6 +250,7 @@ void initLine(int l)
   // printf("l%u:%X ", l / LINE_SIZE , s.frameBuffer[l]);
 }
 
+// ---------------------------------------------------------------
 void initVsyncLine(int l)
 {
 
@@ -265,6 +268,7 @@ void initVsyncLine(int l)
   // printf("\n");
 }
 
+// ---------------------------------------------------------------
 void __time_critical_func(osdDraw)(int x, int y, int pixel)
 {
   if(x >NTSC_LINE_VISIBLE_REGION_END)
@@ -282,6 +286,7 @@ void __time_critical_func(osdDraw)(int x, int y, int pixel)
   s.frameBuffer[index] = pixel ? TVOUT_2BIT_WHITE : TVOUT_2BIT_BLACK;
 }
 
+// ---------------------------------------------------------------
 void __time_critical_func(osdDrawString)(int x, int y, char* str)
 {
   for(int h=0; h < 8; ++h)
@@ -322,6 +327,7 @@ static uint8_t single_glyph[8] = {
   0x00 //                 
 };
 
+// ---------------------------------------------------------------
 void __time_critical_func(osdDrawString2)(int x, int y, char* str)
 {
   char* ss = str;
@@ -351,6 +357,7 @@ void __time_critical_func(osdDrawString2)(int x, int y, char* str)
   }
 }
 
+// ---------------------------------------------------------------
 void osdInit()
 {
   printf("osd init begin\n");

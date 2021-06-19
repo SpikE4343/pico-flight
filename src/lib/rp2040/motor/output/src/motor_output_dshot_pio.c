@@ -30,9 +30,11 @@ static MotorOutputState_t s;
 
 uint8_t dshotPacketBitPlanes[DSHOT_PACKET_SIZE_BITS];
 
+// ---------------------------------------------------------------
 void dshot_update_bitplanes(uint8_t *bitPlane, DshotPacket_t *packets)
 {
   int bitCount = DSHOT_PACKET_SIZE_BITS;
+  memset(bitPlane, 0, MAX_MOTORS*DSHOT_PACKET_SIZE_BITS);
 
   // for each packet
   for (int p = 0; p < MAX_MOTORS; ++p)
@@ -52,7 +54,7 @@ void dshot_update_bitplanes(uint8_t *bitPlane, DshotPacket_t *packets)
   }
 }
 
-
+// ---------------------------------------------------------------
 static void dma_init(PIO pio, uint sm)
 {
   s.dmaId = dma_claim_unused_channel(true);
@@ -71,6 +73,7 @@ static void dma_init(PIO pio, uint sm)
       false);
 }
 
+// ---------------------------------------------------------------
 void motorOutputInit()
 {
   
@@ -89,6 +92,7 @@ void motorOutputInit()
   printf("motor init end\n");
 }
 
+// ---------------------------------------------------------------
 void motorOutputSet(bool enabled, TDataVar_t *output)
 {
   DshotPacket_t packets[MOTOR_MAX_OUTPUT];
@@ -107,7 +111,14 @@ void motorOutputSet(bool enabled, TDataVar_t *output)
       );
 
       packets[m] = dshotBuildPacket(motorValue);
-      tdv_motor_out_cmd[m].v.u16 = packets[m].throttle;
+      tdv_motor_out_cmd[m].v.u16 = packets[m].value;
+    }
+  }
+  else
+  {
+    for (int m = 0; m < MAX_MOTORS; ++m)
+    {
+      tdv_motor_out_cmd[m].v.u16 = packets[m].value;
     }
   }
 

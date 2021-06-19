@@ -5,6 +5,7 @@
 #include "telemetry.h"
 #include "data_vars.h"
 
+// ---------------------------------------------------------------
 void gyro_vars_init()
 {
   telemetry_register(&tdv_gyro_spi_pins_in);
@@ -27,6 +28,7 @@ void gyro_vars_init()
   telemetry_register(&tdv_gyro_cal_retries);
 }
 
+// ---------------------------------------------------------------
 void fc_vars_init()
 {
   telemetry_register(&tdv_fc_state);
@@ -42,6 +44,8 @@ void fc_vars_init()
 
   telemetry_register(&tdv_fc_update_rate_hz);
   telemetry_register(&tdv_fc_telemetry_rate_hz);
+  telemetry_register(&tdv_fc_failsafe_rx_loss_ms);
+  
 
   telemetry_register_array(tdv_fc_rates_raw, 3);
   telemetry_register_array(tdv_fc_rates_filtered, 3);
@@ -67,12 +71,14 @@ void fc_vars_init()
   telemetry_register_array(tdv_fc_pid_pv, 3);
 }
 
+// ---------------------------------------------------------------
 void motor_common_init()
 {
   telemetry_register_array(tdv_motor_direction, 4);
   telemetry_register(&tdv_motor_count);
 }
 
+// ---------------------------------------------------------------
 void motor_mixer_init()
 {
   telemetry_register_array(tdv_motor0_mix, 4);
@@ -83,6 +89,7 @@ void motor_mixer_init()
   telemetry_register_array( tdv_mixer_input, 4 );
 }
 
+// ---------------------------------------------------------------
 void motor_output_init()
 {
   telemetry_register_array(tdv_motor_output, 4);
@@ -97,6 +104,7 @@ void motor_output_init()
   telemetry_register(&tdv_motor_output_rate);
 }
 
+// ---------------------------------------------------------------
 void rc_vars_init()
 {
   telemetry_register(&tdv_rc_signal_lost);
@@ -120,6 +128,7 @@ void rc_vars_init()
   telemetry_register_array(tdv_rc_input, 32);
 }
 
+// ---------------------------------------------------------------
 void data_vars_init()
 {
   printf("init data vars system\n");

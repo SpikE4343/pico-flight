@@ -12,6 +12,7 @@ target_include_directories(flight INTERFACE
 
 target_link_libraries(flight INTERFACE
     pico_multicore
+    core-system
     core-math
     core-telemetry
     data-vars

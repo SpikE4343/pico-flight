@@ -12,25 +12,6 @@
 #include "osd.h"
 
 
-// typedef struct
-// {
-//   double control;
-//   double gyro;
-//   double print;
-// } FlightUpdateIntervalConfig_t;
-
-// typedef struct
-// {
-//   float rc;
-//   float super;
-//   float expo;
-// } ControlRates_t;
-
-// typedef struct
-// {
-//   ControlRates_t rates[4];
-// } ControlConfig_t;
-
 void flightInit();
 void flightGyroUpdateTask();
 void flightInitVars();

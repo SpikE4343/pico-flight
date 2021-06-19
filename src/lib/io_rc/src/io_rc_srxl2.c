@@ -1,11 +1,4 @@
-/* SPI Slave example, sender (uses SPI master driver)
 
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -70,17 +63,19 @@ void userProvidedHandleVtxData(SrxlVtxData *pVtxData);
 #define STOP_BITS 1
 #define PARITY UART_PARITY_NONE
 
-
+// ---------------------------------------------------------------
 static inline bool buffer_empty()
 {
   return s.rx.length == 0;
 }
 
+// ---------------------------------------------------------------
 static inline bool buffer_full()
 {
   return s.rx.read == s.rx.write && s.rx.length > 0;
 }
 
+// ---------------------------------------------------------------
 uint8_t buffer_read()
 {
   if (buffer_empty())
@@ -93,34 +88,31 @@ uint8_t buffer_read()
   return data;
 }
 
+// ---------------------------------------------------------------
 void buffer_write(uint8_t data)
 {
   if (buffer_full())
   {
-    //printf("full\n");
     return;
   }
 
   s.rx.buffer[s.rx.write] = data;
   s.rx.write = (s.rx.write + 1) & BUFFER_WRAP_MASK;
   ++s.rx.length;
-  //printf("rx data write: %02X, %u\n", data, s.rx.length );
 }
 
+// ---------------------------------------------------------------
 // TODO: investigate using dma for this transfer
 void on_uart_rx()
 {
   if (uart_is_readable(s.uart))
   {
-
     uint8_t data = ((uart_hw_t *const)s.uart)->dr;
-
-    //uint8_t data = uart_getc(s.uart);
-
     buffer_write(data);
   }
 }
 
+// ---------------------------------------------------------------
 void inputRxInit()
 {
   memset(&s, 0, sizeof(s));
@@ -182,6 +174,7 @@ void inputRxInit()
     return;
 }
 
+// ---------------------------------------------------------------
 int readData(int max)
 {
   int read = 0;
@@ -189,13 +182,14 @@ int readData(int max)
   {
     uint8_t data = uart_getc(s.uart);
     ++read;
-    ++tdv_rc_uart_pins_rx.v.u32;
+    ++tdv_rc_uart_rx_bytes.v.u32;
     buffer_write(data);
   }
 
   return read;
 }
 
+// ---------------------------------------------------------------
 void print_packet()
 {
   printf("[l:%u, r:%u, w:%u, p1:%u] ",
@@ -210,6 +204,7 @@ void print_packet()
   printf("\n");
 }
 
+// ---------------------------------------------------------------
 void inputRxUpdate()
 {
   readData(BUFFER_SIZE - s.rx.length);
@@ -218,11 +213,13 @@ void inputRxUpdate()
   {
     switch (tdv_rc_recv_state.v.u8)
     {
+    // ---------------------------------------------------------------
     case RX_RESET:
       s.rx.packetLen = 0;
       tdv_rc_recv_state.v.u8 = RX_FIND_MARKER;
       break;
 
+    // ---------------------------------------------------------------
     case RX_FIND_MARKER:
     case RX_LOOP_MARKER:
     {
@@ -230,14 +227,6 @@ void inputRxUpdate()
         break;
 
       uint8_t data = buffer_read();
-
-      // printf("rx state: %u, pl:%u, bl:%u, r:%u, w:%u, d:%02X\n\t",
-      //        s.rx.state,
-      //        s.rx.packetLen,
-      //        s.rx.length,
-      //        s.rx.read,
-      //        s.rx.write,
-      //        data);
 
       if (data == SPEKTRUM_SRXL_ID)
       {
@@ -254,11 +243,10 @@ void inputRxUpdate()
       {
         srxlRun(0, 4);
       }
-
-      // print_packet();
     }
     break;
 
+    // ---------------------------------------------------------------
     case RX_READ_HEADER:
     {
       if (buffer_empty())
@@ -266,21 +254,12 @@ void inputRxUpdate()
 
       uint8_t data = buffer_read();
 
-      // printf("rx state: %u, pl:%u, bl:%u, r:%u, w:%u, d:%02X\n\t",
-      //        s.rx.state,
-      //        s.rx.packetLen,
-      //        s.rx.length,
-      //        s.rx.read,
-      //        s.rx.write,
-      //        data);
-
       s.rx.packet[s.rx.packetLen++] = data;
       tdv_rc_recv_state.v.u8 = RX_READ_DATA;
-
-      // print_packet();
     }
     break;
 
+    // ---------------------------------------------------------------
     case RX_READ_DATA:
     {
 
@@ -290,17 +269,10 @@ void inputRxUpdate()
         s.rx.packet[s.rx.packetLen++] = data;
       }
 
-      // printf("\t");
-      // print_packet();
-
       if (s.rx.header.length != s.rx.packetLen)
         break;
 
-      //print_packet();
       bool valid = srxlParsePacket(0, s.rx.packet, s.rx.header.length);
-      //printf("parse packet: %u\n", valid);
-      if(!valid)
-        print_packet();
 
       tdv_rc_recv_state.v.u8 = RX_RESET;
     }
@@ -309,16 +281,18 @@ void inputRxUpdate()
   }
 }
 
+// ---------------------------------------------------------------
 void userProvidedSetBaud(uint8_t uart, uint32_t baudRate)
 {
   if (uart != 0)
     return;
 
-  printf("rx: srxl2: set buadrate: %u\n", baudRate);
-  // int actual = uart_set_baudrate(s.uart, baudRate);
-  // assert(actual == baudRate);
+  // printf("rx: srxl2: set buadrate: %u\n", baudRate);
+  int actual = uart_set_baudrate(s.uart, baudRate);
+  assert(actual == baudRate);
 }
 
+// ---------------------------------------------------------------
 void userProvidedSendOnUart(uint8_t uart, uint8_t *pBuffer, uint8_t length)
 {
   if (uart != 0)
@@ -327,6 +301,7 @@ void userProvidedSendOnUart(uint8_t uart, uint8_t *pBuffer, uint8_t length)
   uart_write_blocking(s.uart, pBuffer, length);
 }
 
+// ---------------------------------------------------------------
 // User-defined routine to populate telemetry data
 void userProvidedFillSrxlTelemetry(SrxlTelemetryData *pTelemetry)
 {
@@ -337,6 +312,7 @@ void userProvidedFillSrxlTelemetry(SrxlTelemetryData *pTelemetry)
   srxlTelemData.sensorID = 0;
 }
 
+// ---------------------------------------------------------------
 // User-defined routine to use the provided channel data from the SRXL bus master
 void userProvidedReceivedChannelData(SrxlChannelData *pChannelData, bool isFailsafeData)
 {
@@ -361,16 +337,18 @@ void userProvidedReceivedChannelData(SrxlChannelData *pChannelData, bool isFails
   // // RSSI and frame loss data are also available:
   // if(srxlChData.rssi < -85 || (srxlChData.rssi > 0 && srxlChData.rssi < 10))
   //     EnterLongRangeModeForExample();
-
-  for (int i = 0; i < sizeof(srxlChData.values) >> 1; ++i)
+  // divdie by 4 for only 16 channels
+  for (int i = 0; i < sizeof(srxlChData.values) >> 2; ++i)
   {
      tdv_rc_input[i].v.f32 = (srxlChData.values[i] - 32767) / 32767.0f;
   }
 
   tdv_rc_failsafe.v.b8 = isFailsafeData;
   tdv_rc_rssi.v.i8 = srxlChData.rssi;
+  // tdv_rc_recv_last_us.v.u32 = system_time_ns();
 }
 
+// ---------------------------------------------------------------
 void userProvidedHandleVtxData(SrxlVtxData *pVtxData)
 {
   printf("vtx data\n");

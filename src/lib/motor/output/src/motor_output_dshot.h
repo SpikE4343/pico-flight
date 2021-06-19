@@ -32,7 +32,7 @@ typedef struct
 
 #define DSHOT_PACKET_SIZE_BITS (sizeof(DshotPacket_t) * 8)
 
-uint8_t dshotPacketCrc(DshotPacket_t packet);
+uint8_t dshotPacketCrc(uint16_t packet);
 DshotPacket_t dshotBuildPacket(uint16_t throttle);
 
 #endif
