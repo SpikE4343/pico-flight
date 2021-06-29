@@ -14,9 +14,9 @@
        |  | 0V | sync level |
        |  | 1V | Black/Blanking  |
        |  | 3.3v | White |
-    - [ ] Still has some v-sync issues, probably from end of frame to start of next frame timing inconsistencies.
-      - [ ] Double buffer dma output so remove interrupt delay when starting the next frame
-       
+    - Still has some v-sync issues, probably from end of frame to start of next frame timing inconsistencies.
+      - [ ] Convert dma to use a pacing timer for each line, so the timing is consitent
+  - [ ] **PIO based camera stream**       
   - [ ] **Configuration Protocol**
     * Device maintains schema for transmition to configurator (any other device)
     * Key Value pairing treat like register map
@@ -26,9 +26,14 @@
       - [ ] Read/Write to "file" all config vars
       - [ ] Logging to flash/sdcard
     - [ ] Configurator
-      - [ ] Native?
-        -[ ] PySide?
-      - [ ] Web?
-        -[ ] usb network endpoint to host rest like api?
-      - [ ] Host on device mass storage?
+      - [ ] Native
+        - [x] Openframeworks based via serial port with read/write support
+      - [ ] PySide?
+    - Web
+      - [x] usb network endpoint
+        - [x] basic http server 
+        - [ ] route handling for subsystems
+    - [ ] Host on device mass storage
+      - [ ] Store current settings in human readable format.
+      - [ ] Keep a backup of last settings?
     
