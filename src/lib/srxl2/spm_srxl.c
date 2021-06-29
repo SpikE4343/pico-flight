@@ -676,7 +676,7 @@ bool srxlParsePacket(uint8_t busIndex, uint8_t* packet, uint8_t length)
     // Validate SRXL ID and length
     if(packet[0] != SPEKTRUM_SRXL_ID || packet[2] != length)
     {
-      printf("srxl2: error: invalid packet data\n");
+      // printf("srxl2: error: invalid packet data\n");
         return false;
     }
 
@@ -685,7 +685,7 @@ bool srxlParsePacket(uint8_t busIndex, uint8_t* packet, uint8_t length)
     uint16_t packet_crc = (((uint16_t)packet[length - 2] << 8) | packet[length - 1]);
     if( packet_crc != crc)
     {
-        printf("srxl2: error: checksum invalid: p:%u != %u\n", packet_crc, crc);
+        // printf("srxl2: error: checksum invalid: p:%u != %u\n", packet_crc, crc);
         return false;
     }
 

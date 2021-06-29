@@ -2,6 +2,9 @@ add_executable(pico-flight
         pico-flight.c
         )
 
+target_include_directories(pico-flight PRIVATE 
+  ${CMAKE_CURRENT_LIST_DIR})
+
 # Pull in our pico_stdlib which aggregates commonly used features
 target_link_libraries(pico-flight 
     pico_stdlib

@@ -64,8 +64,8 @@ typedef struct
   uint32_t fbSize;
   uint8_t dmaId;
   uint8_t dmaMask;
-  uint8_t dmaControlId;
-  uint8_t dmaControlMask;
+  // uint8_t dmaControlId;
+  // uint8_t dmaControlMask;
   uint32_t frameTransferCount;
   uint8_t* frameBuffer;
   uint8_t* font;
@@ -94,19 +94,10 @@ static void dma_init(PIO pio, uint sm)
   s.dmaId = dma_claim_unused_channel(true);
   s.dmaMask = 1u << s.dmaId;
 
-  // s.dmaControlId = dma_claim_unused_channel(true);
-  // s.dmaControlMask = 1u << s.dmaControlId;
-
-
   s.frameTransferCount = s.fbSize;
 
   irq_add_shared_handler(DMA_IRQ_0, dma_complete_handler, PICO_HIGHEST_IRQ_PRIORITY);
-  // main DMA channel outputs 8 word fragments, and then chains back to the chain channel
-  
-  
-  
-  
-  
+
   dma_channel_config c = dma_channel_get_default_config(s.dmaId);
   channel_config_set_dreq(&c, pio_get_dreq(pio, sm, true));
   channel_config_set_irq_quiet(&c, false);

@@ -1,6 +1,7 @@
 
 #include "telemetry.h"
 #include "telemetry_native.h"
+#include "system.h"
 #include <string.h>
 #include <math.h>
 #include <assert.h>
@@ -350,23 +351,25 @@ void __time_critical_func(telemetry_send)(uint64_t start, uint64_t now)
   if (tdv_next_desc_send.v.u32 < s.itemCount)
   {
     TDataVar_t *var = value_table_get(tdv_next_desc_send.v.u32 + 1);
-
-    if(!sendsampled)
+    if(var)
     {
-      telemetry_sample(var);
+      if(!sendsampled)
+      {
+        telemetry_sample(var);
 
-      TDataModPacket_t *packet = (s.valueMods + (s.valueModCount-1));
+        TDataModPacket_t *packet = (s.valueMods + (s.valueModCount-1));
 
-      if (packet->payload.time == 0.0f)
-        packet->payload.time = ts;
+        if (packet->payload.time == 0.0f)
+          packet->payload.time = ts;
 
-      sendLength += telemetry_write_data_frame(packet);
+        sendLength += telemetry_write_data_frame(packet);
+      }
+
+      // sendLength++;
+      uint8_t *descStart = ((uint8_t *)s.valueMods) + sendLength;
+
+      sendLength += telemetry_write_desc_frame((TDataDescFramePacket_t *)descStart, var);
     }
-
-    // sendLength++;
-    uint8_t *descStart = ((uint8_t *)s.valueMods) + sendLength;
-
-    sendLength += telemetry_write_desc_frame((TDataDescFramePacket_t *)descStart, var);
     ++tdv_next_desc_send.v.u32;
   }
   else

@@ -1,1 +1,1 @@
-[{"node":"UART0","expanded":true,"format":0,"pinned":false},{"node":"UART0.UARTIBRD","expanded":true,"format":0}]
+[{"node":"DMA.CH4_CTRL_TRIG","expanded":true,"format":0},{"node":"UART0.UARTIBRD","expanded":true,"format":0},{"node":"UART1.UARTDR","expanded":true,"format":0}]

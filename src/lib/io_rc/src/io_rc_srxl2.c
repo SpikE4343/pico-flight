@@ -6,10 +6,6 @@
 #include <assert.h>
 
 #include "pico/stdlib.h"
-#include "hardware/uart.h"
-#include "hardware/structs/uart.h"
-#include "hardware/dma.h"
-#include "hardware/irq.h"
 
 #include "math_util.h"
 #include "io_rc.h"
@@ -35,11 +31,6 @@ typedef struct
     };
 
     uint8_t packetLen;
-
-    uint8_t buffer[BUFFER_SIZE];
-    volatile uint16_t read;
-    volatile uint16_t write;
-    volatile uint16_t length;
   } rx;
 } InputRxState_t;
 
@@ -58,113 +49,13 @@ void userProvidedHandleVtxData(SrxlVtxData *pVtxData);
 #define RX_READ_DATA 4
 #define RX_PARSE 5
 
-#define BAUD_RATE 400000 //115200
-#define DATA_BITS 8
-#define STOP_BITS 1
-#define PARITY UART_PARITY_NONE
+
+
 
 // ---------------------------------------------------------------
-static inline bool buffer_empty()
+void io_rc_protocol_init()
 {
-  return s.rx.length == 0;
-}
-
-// ---------------------------------------------------------------
-static inline bool buffer_full()
-{
-  return s.rx.read == s.rx.write && s.rx.length > 0;
-}
-
-// ---------------------------------------------------------------
-uint8_t buffer_read()
-{
-  if (buffer_empty())
-    return 0;
-
-  uint8_t data = s.rx.buffer[s.rx.read];
-  s.rx.read = (s.rx.read + 1) & BUFFER_WRAP_MASK;
-  --s.rx.length;
-  //printf("rx data read: %02X, %u, %u, %u\n", data, s.rx.read, s.rx.write, s.rx.length);
-  return data;
-}
-
-// ---------------------------------------------------------------
-void buffer_write(uint8_t data)
-{
-  if (buffer_full())
-  {
-    return;
-  }
-
-  s.rx.buffer[s.rx.write] = data;
-  s.rx.write = (s.rx.write + 1) & BUFFER_WRAP_MASK;
-  ++s.rx.length;
-}
-
-// ---------------------------------------------------------------
-// TODO: investigate using dma for this transfer
-void on_uart_rx()
-{
-  if (uart_is_readable(s.uart))
-  {
-    uint8_t data = ((uart_hw_t *const)s.uart)->dr;
-    buffer_write(data);
-  }
-}
-
-// ---------------------------------------------------------------
-void inputRxInit()
-{
-  memset(&s, 0, sizeof(s));
-  s.uniqueID = rand();
-  s.uart = tdv_rc_uart_id.v.u8 ? uart1 : uart0;
-  s.rx.read = s.rx.write = 0;
-  memset(s.rx.buffer, 0, sizeof(s.rx.buffer));
-  
-
   tdv_rc_recv_state.v.u8 = RX_RESET;
-
-  uart_init(s.uart, 2400);
-
-  gpio_set_function(tdv_rc_uart_pins_tx.v.u8, GPIO_FUNC_UART);
-  gpio_set_function(tdv_rc_uart_pins_tx.v.u8, GPIO_FUNC_UART);
-
-  int actual = uart_set_baudrate(s.uart, BAUD_RATE);
-  assert(actual == BAUD_RATE);
-
-  // Set UART flow control CTS/RTS, we don't want these, so turn them off
-  uart_set_hw_flow(s.uart, false, false);
-
-  // Set our data format
-  uart_set_format(s.uart, DATA_BITS, STOP_BITS, PARITY);
-
-  uart_set_fifo_enabled(s.uart, true);
-
-  int UART_IRQ = !s.uart ? UART0_IRQ : UART1_IRQ;
-
-  // And set up and enable the interrupt handlers
-  irq_set_exclusive_handler(UART_IRQ, on_uart_rx);
-  irq_set_enabled(UART_IRQ, true);
-
-  uart_set_irq_enables(s.uart, true, false);
-
-  // dma_claim_mask(DMA_CHANNEL_MASK);
-
-  //   // main DMA channel outputs 8 word fragments, and then chains back to the chain channel
-  // dma_channel_config channel_config = dma_channel_get_default_config(DMA_CHANNEL);
-  // channel_config_set_dreq(&channel_config, s.config->uart ? DREQ_UART1_RX : DREQ_UART0_RX);
-  // //channel_config_set_irq_quiet(&channel_config, false);
-  // channel_config_set_transfer_data_size(&channel_config, DMA_SIZE_8);
-  // channel_config_set_write_increment(&channel_config, true);
-  // //channel_config_set_ring(&channel_config, false, 4);
-  // dma_channel_configure(
-  //   DMA_CHANNEL,
-  //   &channel_config,
-  //   s.rx.buffer,
-  //   dshotPacketBitPlanes,
-  //   DSHOT_PACKET_SIZE_BITS, // 8 words for 8 bit planes
-  //   false
-  //   );
 
   if (!srxlInitDevice(SRXL_DEVICE_ID, SRXL_DEVICE_PRIORITY, SRXL_DEVICE_INFO, s.uniqueID))
     return;
@@ -174,42 +65,25 @@ void inputRxInit()
     return;
 }
 
-// ---------------------------------------------------------------
-int readData(int max)
-{
-  int read = 0;
-  while (uart_is_readable(s.uart) && read < max)
-  {
-    uint8_t data = uart_getc(s.uart);
-    ++read;
-    ++tdv_rc_uart_rx_bytes.v.u32;
-    buffer_write(data);
-  }
+// // ---------------------------------------------------------------
+// void print_packet()
+// {
+//   printf("[l:%u, r:%u, w:%u, p1:%u] ",
+//          s.rx.length,
+//          s.rx.read,
+//          s.rx.write,
+//          s.rx.packetLen);
 
-  return read;
-}
+//   for (int i = 0; i < s.rx.packetLen; ++i)
+//     printf("%02X ", s.rx.packet[i]);
 
-// ---------------------------------------------------------------
-void print_packet()
-{
-  printf("[l:%u, r:%u, w:%u, p1:%u] ",
-         s.rx.length,
-         s.rx.read,
-         s.rx.write,
-         s.rx.packetLen);
-
-  for (int i = 0; i < s.rx.packetLen; ++i)
-    printf("%02X ", s.rx.packet[i]);
-
-  printf("\n");
-}
+//   printf("\n");
+// }
 
 // ---------------------------------------------------------------
-void inputRxUpdate()
+void io_rc_protocol_update()
 {
-  readData(BUFFER_SIZE - s.rx.length);
-
-  while (!buffer_empty())
+  while (!io_rc_rx_buffer_empty())
   {
     switch (tdv_rc_recv_state.v.u8)
     {
@@ -223,10 +97,10 @@ void inputRxUpdate()
     case RX_FIND_MARKER:
     case RX_LOOP_MARKER:
     {
-      if (buffer_empty())
+      if (io_rc_rx_buffer_empty())
         break;
 
-      uint8_t data = buffer_read();
+      uint8_t data = io_rc_rx_buffer_read();
 
       if (data == SPEKTRUM_SRXL_ID)
       {
@@ -249,10 +123,10 @@ void inputRxUpdate()
     // ---------------------------------------------------------------
     case RX_READ_HEADER:
     {
-      if (buffer_empty())
+      if (io_rc_rx_buffer_empty())
         break;
 
-      uint8_t data = buffer_read();
+      uint8_t data = io_rc_rx_buffer_read();
 
       s.rx.packet[s.rx.packetLen++] = data;
       tdv_rc_recv_state.v.u8 = RX_READ_DATA;
@@ -263,9 +137,9 @@ void inputRxUpdate()
     case RX_READ_DATA:
     {
 
-      while (!buffer_empty() && s.rx.header.length != s.rx.packetLen)
+      while (!io_rc_rx_buffer_empty() && s.rx.header.length != s.rx.packetLen)
       {
-        uint8_t data = buffer_read();
+        uint8_t data = io_rc_rx_buffer_read();
         s.rx.packet[s.rx.packetLen++] = data;
       }
 
@@ -273,6 +147,10 @@ void inputRxUpdate()
         break;
 
       bool valid = srxlParsePacket(0, s.rx.packet, s.rx.header.length);
+
+      tdv_rc_packet_loss.v.u32 += !valid;
+
+      tdv_rc_frames_recv.v.u32 += valid;
 
       tdv_rc_recv_state.v.u8 = RX_RESET;
     }
@@ -288,8 +166,8 @@ void userProvidedSetBaud(uint8_t uart, uint32_t baudRate)
     return;
 
   // printf("rx: srxl2: set buadrate: %u\n", baudRate);
-  int actual = uart_set_baudrate(s.uart, baudRate);
-  assert(actual == baudRate);
+  // int actual = uart_set_baudrate(s.uart, baudRate);
+  // assert(actual == baudRate);
 }
 
 // ---------------------------------------------------------------
@@ -337,8 +215,8 @@ void userProvidedReceivedChannelData(SrxlChannelData *pChannelData, bool isFails
   // // RSSI and frame loss data are also available:
   // if(srxlChData.rssi < -85 || (srxlChData.rssi > 0 && srxlChData.rssi < 10))
   //     EnterLongRangeModeForExample();
-  // divdie by 4 for only 16 channels
-  for (int i = 0; i < sizeof(srxlChData.values) >> 2; ++i)
+  // divdie by 8 for only 8 channels
+  for (int i = 0; i < sizeof(srxlChData.values) >> 3; ++i)
   {
      tdv_rc_input[i].v.f32 = (srxlChData.values[i] - 32767) / 32767.0f;
   }

@@ -1,0 +1,9 @@
+[submodule "src/lib/net/lwip"]
+	path = src/lib/net/lwip
+	url = git://git.savannah.nongnu.org/lwip.git
+[submodule "src/lib/external/lwip"]
+	path = src/lib/external/lwip
+	url = git://git.savannah.nongnu.org/lwip.git
+[submodule "src/lib/net/lwip/lib/lwip"]
+	path = src/lib/net/lwip/lib/lwip
+	url = git://git.savannah.nongnu.org/lwip.git

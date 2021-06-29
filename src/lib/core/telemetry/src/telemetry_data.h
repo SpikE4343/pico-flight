@@ -16,6 +16,7 @@
 
 #define TELEMETRY_MARKER_BYTE 0x7C
 
+// ---------------------------------------------------------------
 typedef enum {
     Tdt_u8=0,
     Tdt_i8,
@@ -31,7 +32,7 @@ typedef enum {
     // Tdt_f64
 } TDataType_t;
 
-
+// ---------------------------------------------------------------
 typedef enum {
     Tdm_read= 1 << 0,
     Tdm_write= 1 << 1,
@@ -41,17 +42,15 @@ typedef enum {
     Tdm_realtime = 1 << 4,
 } TDataModType_t;
 
+// ---------------------------------------------------------------
 typedef struct {
   uint8_t marker;
   uint8_t type;
   uint8_t size;
 } __packed PacketHeader_t;
 
+// ---------------------------------------------------------------
 typedef union {
-  // double f64;
-  // uint64_t u64;
-  // int64_t i64;
-  
   float f32;
 
   uint32_t u32;
@@ -78,21 +77,21 @@ typedef union {
   
 } __packed TValue_t;
 
+// ---------------------------------------------------------------
 typedef struct {
   uint32_t id;
   uint8_t type;
   TValue_t value;
 } __packed TDataValue_t;
 
+// ---------------------------------------------------------------
 typedef struct {
   uint8_t mod;
   float time;
   TDataValue_t value;
 } __packed TDataValueMod_t;
 
-
-
-
+// ---------------------------------------------------------------
 typedef struct {
   uint8_t type;
   uint8_t modsAllowed;
@@ -100,12 +99,14 @@ typedef struct {
   char* desc; // string
 } __packed TDataValueDesc_t;
 
+// ---------------------------------------------------------------
 typedef struct {
   uint32_t id;
   TValue_t v;
   TDataValueDesc_t meta;
 } TDataVar_t;
 
+// ---------------------------------------------------------------
 // descriptions of available values
 typedef struct {
   PacketHeader_t header;
@@ -113,14 +114,14 @@ typedef struct {
   uint8_t crc;
 } __packed TDataDescFramePacket_t;
 
-
+// ---------------------------------------------------------------
 typedef struct {
   PacketHeader_t header;
   TDataValueMod_t payload;
   uint8_t crc;
 } __packed TDataModPacket_t;
 
-
+// ---------------------------------------------------------------
 typedef enum {
   PKT_NONE = 0,
   PKT_DATA_DESC_FRAME=50,

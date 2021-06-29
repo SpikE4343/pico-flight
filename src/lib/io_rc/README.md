@@ -6,13 +6,12 @@
 
 ## Protocols
   
-  - [ ] **SRXL2**
+  - [x] **SRXL2**
     - [x] Basic parsing of control data via spectrum public library: []()
-    - [ ] Try UART interrupt method to fill rx buffer
-    - [ ] Add dma support to since current polling implemention can't keep up with 400k buad with control frame size of 38 bytes
+    - [x] Try UART interrupt method to fill rx buffer
+    - [ ] **IN-PROGRESS** Add dma support to since current polling implemention can't keep up with 400k buad with control frame size of 38 bytes
 
-  - [ ] **SBUS**
-    - [ ] TODO
+  - [ ] **SBUS** TODO
 
   - [ ] **Ghost** TODO
 

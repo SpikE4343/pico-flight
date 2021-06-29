@@ -44,7 +44,7 @@ void motorMixerCalculateOutputs(TDataVar_t *input, TDataVar_t *output, uint8_t m
     ty = input[2].v.f32 * mix[2].v.f32;
     tt = input[3].v.f32 * mix[3].v.f32;
 
-    temp = (tr+tp)+ ty+tt;
+    temp = (tr+tp)+ ty;
   
     tempOut[m] = temp;
 
@@ -57,12 +57,13 @@ void motorMixerCalculateOutputs(TDataVar_t *input, TDataVar_t *output, uint8_t m
   // only normalize if we are saturating atleast one motor
   range = fmax(range, 1.0);
 
-  float normMin = min /range;
+  float normMin = min / range;
   float normMax = max / range;
 
   for (m = 0; m < motorCount; ++m)
   {
     TDataVar_t* mix = mmixes[m];
+    tt = input[3].v.f32 * mix[3].v.f32;
     output[m].v.f32 =  math_clamp(0.0f, tempOut[m], 1.0f);
   }
 }

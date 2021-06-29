@@ -9,6 +9,7 @@
 #include "hardware/timer.h"
 #include "hardware/gpio.h"
 #include "pico/multicore.h"
+#include "web_server.h"
 
 #include "filters.h"
 #include "flight_controller.h"
@@ -92,9 +93,12 @@ void flightCore0()
 
   bool status = false;
   
+  // webServerInit();
+
   while(true)
   {
-    if(++counter0 % 100 == 0)
+    // webServerUpdate();
+    if(++counter0 % 1000 == 0)
     {
       status = !status;
       gpio_put(PICO_DEFAULT_LED_PIN, status);
@@ -130,10 +134,6 @@ void flightCore1()
 // ---------------------------------------------------------------
 void flightInit()
 {
-  printf("flightInit\n");
-  sleep_ms(2000);
-
-
   tdv_fc_state.v.i32 = FC_STATE_BOOT;
 
   multicore_launch_core1(flightCore1);
@@ -141,8 +141,8 @@ void flightInit()
   // wait for control loop core init to complete
   int core1_init = multicore_fifo_pop_blocking();
 
-  inputRxInit();
-  osdInit();
+  io_rc_init();
+  // osdInit();
   
 
   state.startupMs = system_time_us();
@@ -194,7 +194,7 @@ float applyBetaflightRates(const int axis, float rcCommandf, const float rcComma
 // TODO: need way to fake control inputs...
 void flightProcessInputs()
 {
-  inputRxUpdate();
+  io_rc_update();
 
   tdv_fc_inputs[0].v.f32 = tdv_rc_input[tdv_rc_mapping[0].v.u8].v.f32;
   tdv_fc_inputs[1].v.f32 = tdv_rc_input[tdv_rc_mapping[1].v.u8].v.f32;
@@ -244,14 +244,7 @@ void flightControlUpdate()
         tdv_fc_inputs, 
         tdv_fc_rates_filtered, 
         1.0f / tdv_fc_update_rate_hz.v.u32);
-      //state.r.motorOutputs.disarmed = false;
-
-      //state.r.motorInputs = state.r.controllerInputs;
-
-      // state.r.motorInputs = flightAttitudeUpdate(
-      //     state.r.controllerInputs,
-      //     state.r.gyroFilteredRates,
-      //     1.0f / config->updateIntervals.control);
+     
       break;
 
     // ---------------------------------------------------------------
@@ -363,14 +356,14 @@ void flightPrintTask()
   // telemetry_sample_array(tdv_fc_rates_raw, 3);
   telemetry_sample_array(tdv_fc_rates_filtered, 3);
   telemetry_sample_array(tdv_motor_output, tdv_motor_count.v.u32);
-  // telemetry_sample_array(tdv_motor_out_cmd, tdv_motor_count.v.u32);
+  telemetry_sample_array(tdv_motor_out_cmd, tdv_motor_count.v.u32);
 
   //telemetry_sample_array(tdv_motor_output, tdv_motor_count.v.u8);
 
   telemetry_sample(&tdv_fc_armed);
-  telemetry_sample(&tdv_fc_gyro_updates);
+  // telemetry_sample(&tdv_fc_gyro_updates);
   telemetry_sample(&tdv_fc_state);
-  telemetry_sample(&tdv_fc_control_updates);
+  // telemetry_sample(&tdv_fc_control_updates);
 
   telemetry_sample(&tdv_fc_core0_counter);
   telemetry_sample(&tdv_fc_core1_counter);
@@ -380,7 +373,13 @@ void flightPrintTask()
   telemetry_sample(&tdv_rc_uart_rx_bytes);
 
   // telemetry_sample_array(tdv_fc_attitude_outputs, 4);
-  telemetry_sample_array(tdv_rc_input, 5);
+  telemetry_sample_array(tdv_rc_input, 8);
+  telemetry_sample(&tdv_rc_rssi);
+  telemetry_sample(&tdv_rc_packet_loss);
+  telemetry_sample(&tdv_rc_frames_recv);
+
+  tdv_rc_packet_loss.v.u32 = 0;
+  tdv_rc_frames_recv.v.u32 = 0;
 
   // telemetry_sample_array(&tdv_fc_pidf_v_roll, 4);
   // telemetry_sample_array(&tdv_fc_pidf_v_pitch, 4);

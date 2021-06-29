@@ -21,4 +21,6 @@ target_link_libraries(flight INTERFACE
     motor-output
     io_rc
     gyro
-    rp2040_osd)
+    rp2040_osd
+    web_server
+    )

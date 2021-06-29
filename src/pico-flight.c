@@ -1,5 +1,3 @@
-
-
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "flight_controller.h"
@@ -7,9 +5,9 @@
 
 #define USING_PICO_PROBE 1
 
-int main(){
+int main()
+{
   stdio_init_all();
-
 
 #if USING_PICO_PROBE
   gpio_set_function(16, GPIO_FUNC_UART);
@@ -17,10 +15,8 @@ int main(){
   uart_set_fifo_enabled(uart0, true);
 #endif
 
-
   telemetryInit();
   data_vars_init();
-
 
   flightInit();
 

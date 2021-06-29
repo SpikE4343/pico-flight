@@ -125,7 +125,7 @@ void rc_vars_init()
   
 
   telemetry_register_array(tdv_rc_mapping, 8);
-  telemetry_register_array(tdv_rc_input, 32);
+  telemetry_register_array(tdv_rc_input, 8);
 }
 
 // ---------------------------------------------------------------

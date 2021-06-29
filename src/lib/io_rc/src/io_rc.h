@@ -16,9 +16,18 @@
 #define MAX_INPUT_CONTROL 32
 
 
-void inputRxInit();
-void inputRxUpdate();
+void io_rc_init();
+void io_rc_update();
 
+bool io_rc_rx_buffer_empty();
+bool io_rc_rx_buffer_full();
+uint8_t io_rc_rx_buffer_read();
+void io_rc_rx_buffer_write(uint8_t data);
+uint8_t* io_rc_rx_buffer_bytes_written(uint8_t size);
 
+void io_rc_protocol_init();
+void io_rc_protocol_update();
+
+void io_rc_rx_dma_init(uint8_t uart);
 
 #endif
