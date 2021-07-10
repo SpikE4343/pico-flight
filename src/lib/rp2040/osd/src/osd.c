@@ -15,6 +15,7 @@
 
 #include "font8x8_basic.h"
 #include "data_vars.h"
+#include "system.h"
 
 DEF_DATA_VAR(tdv_osd_pin_sync, 14, 
   "osd.pin.sync",
@@ -64,8 +65,8 @@ typedef struct
   uint32_t fbSize;
   uint8_t dmaId;
   uint8_t dmaMask;
-  // uint8_t dmaControlId;
-  // uint8_t dmaControlMask;
+  uint8_t dmaControlId;
+  uint8_t dmaControlMask;
   uint32_t frameTransferCount;
   uint8_t* frameBuffer;
   uint8_t* font;
@@ -88,22 +89,64 @@ static void __time_critical_func(dma_complete_handler)()
   }
 }
 
+// Stolen from CircuitPython PWMAudioOut.c for rp2040
+uint32_t calc_pacing_timer_divisor(uint32_t sample_rate, uint32_t system_clock)
+{
+  // Determine the DMA divisor. The RP2040 has four pacing timers we can use
+  // to trigger the DMA. Each has a 16 bit fractional divisor system clock * X / Y where X and Y
+  // are 16-bit.
+
+  uint32_t best_numerator = 0;
+  uint32_t best_denominator = 0;
+  uint32_t best_error = system_clock;
+
+  for (uint32_t denominator = 0xffff; denominator > 0; denominator--) {
+      uint32_t numerator = (denominator * sample_rate) / system_clock;
+      uint32_t remainder = (denominator * sample_rate) % system_clock;
+      if (remainder > (system_clock / 2)) {
+          numerator += 1;
+          remainder = system_clock - remainder;
+      }
+      if (remainder < best_error) {
+          best_denominator = denominator;
+          best_numerator = numerator;
+          best_error = remainder;
+          // Stop early if we can't do better.
+          if (remainder == 0) {
+              break;
+          }
+      }
+  }
+
+  // dma_hw->timer[pacing_timer]
+
+  return best_numerator << 16 | best_denominator;
+}
+
+
+uint32_t cmds[] = 
+{
+  0,0,0
+};
 // ---------------------------------------------------------------
 static void dma_init(PIO pio, uint sm)
 {
   s.dmaId = dma_claim_unused_channel(true);
   s.dmaMask = 1u << s.dmaId;
 
+   s.dmaControlId = dma_claim_unused_channel(true);
+  s.dmaControlMask = 1u << s.dmaControlId;
+
   s.frameTransferCount = s.fbSize;
 
-  irq_add_shared_handler(DMA_IRQ_0, dma_complete_handler, PICO_HIGHEST_IRQ_PRIORITY);
+  // irq_add_shared_handler(DMA_IRQ_0, dma_complete_handler, PICO_HIGHEST_IRQ_PRIORITY);
 
   dma_channel_config c = dma_channel_get_default_config(s.dmaId);
   channel_config_set_dreq(&c, pio_get_dreq(pio, sm, true));
   channel_config_set_irq_quiet(&c, false);
   channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
   channel_config_set_read_increment(&c, true);
-  //channel_config_set_chain_to(&c, s.dmaControlId);
+  channel_config_set_chain_to(&c, s.dmaControlId);
   //channel_config_set_irq_quiet(&c, true);
   //channel_config_set_ring(&channel_config, false, 4);
   dma_channel_configure(
@@ -114,25 +157,37 @@ static void dma_init(PIO pio, uint sm)
       s.frameTransferCount,
       false);
 
-  // c = dma_channel_get_default_config(s.dmaControlId);
-  // channel_config_set_transfer_data_size(&c, DMA_SIZE_32);
-  // channel_config_set_read_increment(&c, true);
-  // channel_config_set_write_increment(&c, true);
-  // channel_config_set_irq_quiet(&c, true);
-  // //channel_config_set_ring(&c, false, 2); // 1 << 3 byte boundary on write ptr
+  // int pacing_timer = 0;
+  // dma_hw->timer[pacing_timer] = 1 << 16 | 60;
+  
+  // calc_pacing_timer_divisor(60, system_clock_hz());
+
+  c = dma_channel_get_default_config(s.dmaControlId);
+  // channel_config_set_dreq(&c, 0x3b + pacing_timer);
+  channel_config_set_transfer_data_size(&c, DMA_SIZE_32);
+  channel_config_set_read_increment(&c, false);
+  channel_config_set_write_increment(&c, false);
+  channel_config_set_irq_quiet(&c, true);
+  //channel_config_set_ring(&c, false, 2); // 1 << 3 byte boundary on write ptr
   // channel_config_set_ring(&c, true, 3); // 1 << 3 byte boundary on write ptr
 
-  // dma_channel_configure(
-  //     s.dmaControlId,
-  //     &c,
-  //     &dma_channel_hw_addr(s.dmaId)->al3_transfer_count, // Initial write address
-  //     (&s.frameTransferCount),                        // Initial read address
-  //     2,                                         // Halt after each control block
-  //     false                                      // Don't start yet
-  // );
+   
+    // calc_pacing_timer_divisor(60, system_clock_hz() );
 
+  dma_channel_configure(
+      s.dmaControlId,
+      &c,
+      &dma_channel_hw_addr(s.dmaId)->al3_read_addr_trig, // Initial write address
+      &s.frameBuffer,                        // Initial read address
+      1,                                         // Halt after each control block
+      false                                      // Don't start yet
+  );
+
+  // cmds[0] = &s.frameBuffer;
+  // cmds[1] = &pio->txf[sm];
+  // cmds[2] = s.frameTransferCount;
   
-  dma_channel_set_irq0_enabled(s.dmaId, true);
+  // dma_channel_set_irq0_enabled(s.dmaId, true);
 }
 
 // ---------------------------------------------------------------
@@ -401,19 +456,19 @@ void osdInit()
   osd_program_init(pio, sm, offset, tdv_osd_pin_sync.v.u8, 2, 10000000);
 
 
-  gpio_set_slewfast(tdv_osd_pin_sync.v.u8, true);
-  gpio_set_slewfast(tdv_osd_pin_out.v.u8, true);
+  // gpio_set_slewfast(tdv_osd_pin_sync.v.u8, true);
+  // gpio_set_slewfast(tdv_osd_pin_out.v.u8, true);
 
-  // gpio_set_drive_strength(info->out, GPIO_DRIVE_12MA);
-  // gpio_set_drive_strength(info->sync, GPIO_DRIVE_12MA);
+  // gpio_set_drive_strength(tdv_osd_pin_sync.v.u8, GPIO_DRIVE_12MA);
+  // gpio_set_drive_strength(tdv_osd_pin_out.v.u8, GPIO_DRIVE_12MA);
 
-  //osdDrawString(50, 100, "A B C D E F G H I J K L M N O P Q R");
+  // osdDrawString(50, 100, "A B C D E F G H I J K L M N O P Q R");
   //osdDrawString2(50, 110, "A B C D E F G H I J K L M N O P Q R");
   
 
   //dma_channel_hw_addr(s.dmaId)->al3_read_addr_trig = (uintptr_t)s.frameBuffer;
-  dma_start_channel_mask(s.dmaMask);
+  dma_start_channel_mask(s.dmaControlMask);
 
-  printf("osd init end\n");
+  //printf("osd init end\n");
 
 }

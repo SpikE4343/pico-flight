@@ -220,6 +220,13 @@ DEF_DATA_VAR(tdv_rc_last_recv_us, 0,
   "Last time data recv from rx",
   u32, Tdm_read);
 
+
+// ---------------------------------------------------------------
+DEF_DATA_VAR(tdv_rc_recv_timeout, 1000,
+  "rc.recv.timeout.ms",
+  "Time without recieving rx packets before failsafe",
+  u32, Tdm_RW | Tdm_config);
+
 // ---------------------------------------------------------------
 #define rc_control_name "rc.input"
 #define rc_control_desc "RC control normalized inputs"

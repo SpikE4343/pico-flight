@@ -122,6 +122,10 @@ void rc_vars_init()
   
   telemetry_register(&tdv_rc_uart_rx_bytes);
   telemetry_register(&tdv_rc_uart_tx_bytes);
+
+  telemetry_register(&tdv_rc_last_recv_us);
+  telemetry_register(&tdv_rc_recv_timeout);
+  
   
 
   telemetry_register_array(tdv_rc_mapping, 8);

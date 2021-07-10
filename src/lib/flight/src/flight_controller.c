@@ -49,6 +49,9 @@ void flightPrintTask();
 static repeating_timer_t timer;
 static repeating_timer_t idle_timer;
 
+static volatile uint32_t counter0 = 0;
+static volatile uint32_t counter1 = 0;
+
 // ---------------------------------------------------------------
 void gyro_ready_callback(uint8_t gpio, uint32_t events)
 {
@@ -57,9 +60,6 @@ void gyro_ready_callback(uint8_t gpio, uint32_t events)
 
   flightGyroUpdateTask(0);
 }
-
-static volatile uint32_t counter0 = 0;
-static volatile uint32_t counter1 = 0;
 
 // ---------------------------------------------------------------
 bool flightIdleTimer(repeating_timer_t* timer)
@@ -142,7 +142,7 @@ void flightInit()
   int core1_init = multicore_fifo_pop_blocking();
 
   io_rc_init();
-  // osdInit();
+  osdInit();
   
 
   state.startupMs = system_time_us();
@@ -191,7 +191,6 @@ float applyBetaflightRates(const int axis, float rcCommandf, const float rcComma
 }
 
 // ---------------------------------------------------------------
-// TODO: need way to fake control inputs...
 void flightProcessInputs()
 {
   io_rc_update();
@@ -205,10 +204,13 @@ void flightProcessInputs()
 // ---------------------------------------------------------------
 void flightControlUpdate()
 {
+  uint64_t now = (uint64_t)system_time_us();
+
   flightProcessInputs();
 
   uint32_t next = tdv_fc_state.v.u32;
-
+  bool rxloss = ((uint32_t)now - tdv_rc_last_recv_us.v.u32)/1000 >= tdv_rc_recv_timeout.v.u32;
+  bool outputEnabled = false;
   switch (tdv_fc_state.v.u32)
   {
     // ---------------------------------------------------------------
@@ -227,9 +229,14 @@ void flightControlUpdate()
     // ---------------------------------------------------------------
     case FC_STATE_ARMED:
 
-      if (tdv_rc_failsafe.v.b8 || tdv_rc_signal_lost.v.b8)
+      if (tdv_rc_failsafe.v.b8 || 
+          tdv_rc_signal_lost.v.b8 ||
+          rxloss)
       {
-        next = FC_STATE_FAILSAFE;
+        tdv_rc_signal_lost.v.b8 |= rxloss;
+        tdv_fc_armed.v.b8 = false;
+
+        next = FC_STATE_DISARMED;
         break;
       }
 
@@ -239,17 +246,21 @@ void flightControlUpdate()
         break;
       }
 
+      outputEnabled = tdv_motor_output_enabled.v.b8;
       flightAttitudeUpdate(
         tdv_fc_attitude_outputs, 
         tdv_fc_inputs, 
         tdv_fc_rates_filtered, 
-        1.0f / tdv_fc_update_rate_hz.v.u32);
+        1.0f / tdv_fc_update_rate_hz.v.u32
+        );
      
       break;
 
     // ---------------------------------------------------------------
     case FC_STATE_FAILSAFE:
-      if (!bool8v(tdv_fc_armed) && !bool8v(tdv_rc_failsafe) && !bool8v(tdv_rc_signal_lost))
+      if (!bool8v(tdv_fc_armed) 
+       && !bool8v(tdv_rc_failsafe) 
+       && !bool8v(tdv_rc_signal_lost))
       {
         next = FC_STATE_DISARMED;
       }
@@ -262,7 +273,28 @@ void flightControlUpdate()
       tdv_fc_inputs[2].v.f32 = tdv_fc_attitude_outputs[2].v.f32 = 0.0f;
       tdv_fc_inputs[3].v.f32 = tdv_fc_attitude_outputs[3].v.f32 = 0.0f;
 
-      if (bool8v(tdv_fc_armed) && !bool8v(tdv_rc_failsafe) && !bool8v(tdv_rc_signal_lost))
+      tdv_fc_pidf_v_pitch[0].v.f32 = 0.0f;
+      tdv_fc_pidf_v_pitch[1].v.f32 = 0.0f;
+      tdv_fc_pidf_v_pitch[2].v.f32 = 0.0f;
+      tdv_fc_pidf_v_pitch[3].v.f32 = 0.0f;
+
+      tdv_fc_pidf_v_roll[0].v.f32 = 0.0f;
+      tdv_fc_pidf_v_roll[1].v.f32 = 0.0f;
+      tdv_fc_pidf_v_roll[2].v.f32 = 0.0f;
+      tdv_fc_pidf_v_roll[3].v.f32 = 0.0f;
+
+      tdv_fc_pidf_v_yaw[0].v.f32 = 0.0f;
+      tdv_fc_pidf_v_yaw[1].v.f32 = 0.0f;
+      tdv_fc_pidf_v_yaw[2].v.f32 = 0.0f;
+      tdv_fc_pidf_v_yaw[3].v.f32 = 0.0f;
+
+      for (int m = 0; m < tdv_motor_count.v.u8; ++m)
+        tdv_motor_output[m].v.f32 = 0;
+
+      if  (bool8v(tdv_fc_armed) 
+       && !bool8v(tdv_rc_failsafe) 
+       && !bool8v(tdv_rc_signal_lost)
+       && !rxloss)
       {
         next = FC_STATE_ARMED;
         break;
@@ -272,8 +304,6 @@ void flightControlUpdate()
     // ---------------------------------------------------------------
     default:
     {
-      uint64_t now = (uint64_t)system_time_us();
-
       if (now < (state.startupMs + (uint64_t)tdv_motor_startup_delay_ms.v.u32))
       {
         //++state.controlUpdates;
@@ -298,7 +328,7 @@ void flightControlUpdate()
   }
 
   motorMixerCalculateOutputs(tdv_fc_attitude_outputs, tdv_motor_output, tdv_motor_count.v.u8);
-  motorOutputSet(tdv_fc_armed.v.b8 & tdv_motor_output_enabled.v.b8, tdv_motor_output);
+  motorOutputSet(outputEnabled, tdv_motor_output);
 
   ++tdv_fc_control_updates.v.u32;
 }
@@ -306,15 +336,14 @@ void flightControlUpdate()
 #define GYRO_SCALE (1000.0f / (float)(65535.0f/2.0f))
 
 // ---------------------------------------------------------------
-// TODO: wait for gyro data ready interrupt
 void flightGyroUpdateTask()
 {
   uint32_t t = timer_hw->timelr;
   GyroState_t* gyro = gyroState();
 
-  tdv_fc_rates_raw[0].v.f32 = ((float)gyro->raw_rates.axis[0]) / 32.8f; //* GYRO_SCALE;
-  tdv_fc_rates_raw[1].v.f32 = ((float)gyro->raw_rates.axis[1]) / 32.8f; //* GYRO_SCALE;
-  tdv_fc_rates_raw[2].v.f32 = ((float)gyro->raw_rates.axis[2]) / 32.8f; //* GYRO_SCALE;
+  tdv_fc_rates_raw[0].v.f32 = ((float)gyro->raw_rates.axis[0]) / 32.8f / 1000.0f; //* GYRO_SCALE;
+  tdv_fc_rates_raw[1].v.f32 = ((float)gyro->raw_rates.axis[1]) / 32.8f / 1000.0f; //* GYRO_SCALE;
+  tdv_fc_rates_raw[2].v.f32 = ((float)gyro->raw_rates.axis[2]) / 32.8f / 1000.0f; //* GYRO_SCALE;
   
   // TODO: explore using hardware interp in blend mode as a low pass filter
 
@@ -394,6 +423,9 @@ void flightPrintTask()
 
   // telemetry_sample(&tdv_rc_uart_rx_bytes);
   // telemetry_sample(&tdv_rc_uart_tx_bytes);
+  
+  // sprintf(buffer, "% u    ", tdv_fc_core0_counter.v.u32);
+  // osdDrawString(10, 90, buffer);
 
   tdv_fc_core0_counter.v.u32 = 0;
   tdv_fc_core1_counter.v.u32 = 0;
@@ -413,8 +445,7 @@ void flightPrintTask()
   // sprintf(buffer, "%f    ",temp);
   // osdDrawString(10, 80, buffer);
 
-  // sprintf(buffer, "% f    ", tdv_fc_gyro_pitch.value.f32);
-  // osdDrawString(10, 90, buffer);
+ 
 
   // sprintf(buffer, "%f    ", tdv_fc_gyro_yaw.value.f32);
   // osdDrawString(10, 100, buffer);
@@ -424,4 +455,6 @@ void flightPrintTask()
   state.lpfAlpha = lpfAlpha(
       tdv_gyro_filter_hz.v.u32,
       1.0f / tdv_gyro_sample_rate_hz.v.u32);
+
+  state.gyroTicksPerControl = (uint32_t)(tdv_gyro_sample_rate_hz.v.u32 / tdv_fc_update_rate_hz.v.u32);
 }

@@ -64,7 +64,7 @@ void motorMixerCalculateOutputs(TDataVar_t *input, TDataVar_t *output, uint8_t m
   {
     TDataVar_t* mix = mmixes[m];
     tt = input[3].v.f32 * mix[3].v.f32;
-    output[m].v.f32 =  math_clamp(0.0f, tempOut[m], 1.0f);
+    output[m].v.f32 =  math_clamp(0.0f, tempOut[m] + tt, 1.0f);
   }
 }
 

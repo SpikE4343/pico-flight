@@ -11,6 +11,7 @@
 #include "io_rc.h"
 #include "data_vars.h"
 #include "spm_srxl.h"
+#include "system.h"
 
 #define BUFFER_SIZE 256
 #define BUFFER_WRAP_MASK 0x00FF
@@ -223,7 +224,7 @@ void userProvidedReceivedChannelData(SrxlChannelData *pChannelData, bool isFails
 
   tdv_rc_failsafe.v.b8 = isFailsafeData;
   tdv_rc_rssi.v.i8 = srxlChData.rssi;
-  // tdv_rc_recv_last_us.v.u32 = system_time_ns();
+  tdv_rc_last_recv_us.v.u32 = (uint32_t)system_time_us();
 }
 
 // ---------------------------------------------------------------

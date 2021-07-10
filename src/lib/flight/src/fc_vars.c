@@ -49,13 +49,13 @@ DEF_DATA_VAR(tdv_fc_armed, false,
 
 // ---------------------------------------------------------------
 DEF_DATA_VAR(tdv_fc_update_rate_hz, 4000, 
-  "fc.update_rate",
-  "True when craft motors are active, false otherwise",
+  "fc.update.hz",
+  "Update count",
   u32, Tdm_RW | Tdm_config);
 
 // ---------------------------------------------------------------
 DEF_DATA_VAR(tdv_fc_telemetry_rate_hz, 60, 
-  "fc.telemetry.rate",
+  "fc.telemetry.hz",
   "Rate, in hertz, to send telemetry samples",
   u32, Tdm_RW | Tdm_config);
 

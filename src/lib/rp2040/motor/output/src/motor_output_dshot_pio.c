@@ -101,13 +101,15 @@ void motorOutputSet(bool enabled, TDataVar_t *output)
   if( enabled )
   {
     uint16_t idle = (uint16_t)(tdv_motor_output_idle.v.f32*MOTOR_MAX_OUTPUT);
+    uint16_t min = (uint16_t)(tdv_motor_output_min.v.f32*MOTOR_MIN_OUTPUT);
+    uint16_t max = (uint16_t)(tdv_motor_output_max.v.f32*MOTOR_MAX_OUTPUT);
 
     for (int m = 0; m < MAX_MOTORS; ++m)
     {
       uint16_t motorValue = math_clamp(
-        MOTOR_MIN_OUTPUT, 
+        min, 
         (uint16_t)( idle + output[m].v.f32 * MOTOR_MAX_OUTPUT),
-        MOTOR_MAX_OUTPUT
+        max
       );
 
       packets[m] = dshotBuildPacket(motorValue);

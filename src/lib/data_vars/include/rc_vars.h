@@ -16,6 +16,11 @@ DECL_EXTERN_DATA_VAR(tdv_rc_recv_state);
 DECL_EXTERN_DATA_VAR(tdv_rc_uart_rx_bytes);
 DECL_EXTERN_DATA_VAR(tdv_rc_uart_tx_bytes);
 
+DECL_EXTERN_DATA_VAR(tdv_rc_last_recv_us);
+DECL_EXTERN_DATA_VAR(tdv_rc_recv_timeout);
+
+
+
 DECL_EXTERN_DATA_VAR(tdv_rc_uart_pins_tx);
 DECL_EXTERN_DATA_VAR(tdv_rc_uart_pins_rx);
 DECL_EXTERN_DATA_VAR(tdv_rc_uart_baud);

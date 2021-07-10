@@ -669,7 +669,7 @@ bool srxlParsePacket(uint8_t busIndex, uint8_t* packet, uint8_t length)
     // Validate parameters
     if(busIndex >= SRXL_NUM_OF_BUSES || !packet || length < 5 || length > SRXL_MAX_BUFFER_SIZE)
     {
-      printf("srxl2: error: invalid args, l:%u\n", length);
+      //printf("srxl2: error: invalid args, l:%u\n", length);
         return false;
     }
 
