@@ -1,0 +1,15 @@
+addons/*
+!addons/ofxTelemetry
+
+/build*
+
+apps/*
+!apps/vscode_oF
+
+docs/
+examples/
+libs/
+other/
+projectGenerator-*
+scripts/
+
