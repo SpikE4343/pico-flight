@@ -14,8 +14,9 @@
        |  | 0V | sync level |
        |  | 1V | Black/Blanking  |
        |  | 3.3v | White |
-    - Still has some v-sync issues, probably from end of frame to start of next frame timing inconsistencies.
-      - [ ] Convert dma to use a pacing timer for each line, so the timing is consitent
+    - [x] Still has some v-sync issues, probably from end of frame to start of next frame timing inconsistencies.
+      - [x] Convert to chained dma transfer to automatically restart the frame.
+        > Pacing timers only govern when an individual transfer happens, not the entire channel trigger
   - [ ] **PIO based camera stream**       
   - [ ] **Configuration Protocol**
     * Device maintains schema for transmition to configurator (any other device)
