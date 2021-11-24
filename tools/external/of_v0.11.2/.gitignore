@@ -4,7 +4,7 @@ addons/*
 /build*
 
 apps/*
-!apps/vscode_oF
+#!apps/telemetry
 
 docs/
 examples/

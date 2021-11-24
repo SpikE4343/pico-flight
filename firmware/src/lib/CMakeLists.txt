@@ -1,0 +1,11 @@
+# add_subdirectory(test)
+add_subdirectory(core)
+add_subdirectory(data_vars)
+add_subdirectory(devices)
+add_subdirectory(motor)
+add_subdirectory(ports)
+add_subdirectory(io)
+
+if(NOT PF_BUILD_TOOLS)
+  add_subdirectory(flight)
+endif()

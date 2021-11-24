@@ -1,0 +1,6 @@
+# add_subdirectory(test)
+if(PF_BUILD_TOOLS)
+  add_subdirectory(tools)
+else()
+  add_subdirectory(rp2040)
+endif()

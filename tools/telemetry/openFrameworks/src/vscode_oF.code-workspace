@@ -1,0 +1,78 @@
+{
+	"folders": [
+    {
+      "path": "."
+    },
+    {
+      "path": "${workspaceRoot}/../../../../libs/openFrameworks"
+    },
+    {
+      "path": "${workspaceRoot}/../../../../addons"
+    },
+    {
+      "path": "../../../../../../src"
+    },
+    {
+      "path": "../../../../../../../../../fpga/projects/lognplot"
+    },
+    {
+      "path": "../../.."
+    },
+    {
+      "path": "../../wordRing"
+    }
+  ],
+  "settings": {
+    "files.associations": {
+      "vector": "cpp",
+      "ranges": "cpp",
+      "*.ipp": "cpp",
+      "array": "cpp",
+      "hash_map": "cpp",
+      "bitset": "cpp",
+      "string_view": "cpp",
+      "initializer_list": "cpp",
+      "regex": "cpp",
+      "utility": "cpp",
+      "valarray": "cpp",
+      "*.tcc": "cpp",
+      "string": "cpp",
+      "optional": "cpp",
+      "deque": "cpp",
+      "forward_list": "cpp",
+      "list": "cpp",
+      "unordered_map": "cpp",
+      "unordered_set": "cpp",
+      "cmath": "cpp",
+      "cstdarg": "cpp",
+      "cstddef": "cpp",
+      "cstdio": "cpp",
+      "cstdlib": "cpp",
+      "atomic": "cpp",
+      "bit": "cpp",
+      "compare": "cpp",
+      "concepts": "cpp",
+      "cstdint": "cpp",
+      "exception": "cpp",
+      "algorithm": "cpp",
+      "functional": "cpp",
+      "iterator": "cpp",
+      "memory": "cpp",
+      "memory_resource": "cpp",
+      "random": "cpp",
+      "tuple": "cpp",
+      "type_traits": "cpp",
+      "iosfwd": "cpp",
+      "limits": "cpp",
+      "new": "cpp",
+      "ostream": "cpp",
+      "sstream": "cpp",
+      "typeinfo": "cpp",
+      "*.frag": "cpp",
+      "*.vert": "cpp",
+      "complex": "cpp",
+      "condition_variable": "cpp",
+      "*.def": "cpp"
+    }
+  }
+}

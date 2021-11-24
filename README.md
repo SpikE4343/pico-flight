@@ -1,6 +1,30 @@
 # pico-flight
 
+# How To Build
 
+ * Current two ways to build
+  * For device RPi pico board
+  * Tools
+    * `PF_BUILD_TOOLS=ON`
+ - [ ] Investigate using "target or platform" instead of custom variable
+### Firmare for RP2040 (Pico)
+
+```
+mkdir builds
+mkdir builds/firmware
+cd builds/firmware
+cmake ../..
+make
+```
+
+### Tools
+```
+mkdir builds
+mkdir builds/tools
+cd builds/tools
+cmake ../.. -D PF_BUILD_TOOLS=ON
+make
+```
 
 
 ## Plans
@@ -29,7 +53,8 @@
     - [ ] Configurator
       - [ ] Native
         - [x] Openframeworks based via serial port with read/write support
-      - [ ] PySide?
+          * OF dependency is pretty large and I lost the ofApp.cpp file :(
+        - [ ] Reimplementing using https://github.com/Immediate-Mode-UI/Nuklear and SDL/OpenGL
     - Web
       - [x] usb network endpoint
         - [x] basic http server 

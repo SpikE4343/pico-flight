@@ -1,6 +1,8 @@
 build/
+builds/
 tools/configurator/build*
 __pycache__
 tools/telemetry/pystuff/
 
 .env/
+tools/external/of_v0.11.2/
