@@ -9,6 +9,6 @@ target_include_directories(motor-common INTERFACE
     
 target_link_libraries(motor-common INTERFACE
     core-math
-    core-telemetry
+    core-telemetry-common
     data-vars
 )

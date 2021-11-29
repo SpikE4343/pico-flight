@@ -11,6 +11,6 @@ target_include_directories(gyro INTERFACE
 target_link_libraries(gyro INTERFACE 
   pico_stdlib 
   hardware_spi
-  core-telemetry
+  core-telemetry-common
   data-vars
   )

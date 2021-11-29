@@ -18,6 +18,6 @@ target_link_libraries(rp2040_osd INTERFACE
     hardware_pio
     hardware_dma
     hardware_irq
-    core-telemetry
+    core-telemetry-common
     data-vars
 )

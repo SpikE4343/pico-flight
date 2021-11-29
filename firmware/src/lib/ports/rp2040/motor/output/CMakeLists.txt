@@ -16,7 +16,7 @@ target_include_directories(motor-output-dshot-rp2040-pio INTERFACE
 
 target_link_libraries(motor-output-dshot-rp2040-pio INTERFACE
     core-math
-    core-telemetry
+    core-telemetry-common
     data-vars
     motor-common
     motor-output

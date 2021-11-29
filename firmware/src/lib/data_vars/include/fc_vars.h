@@ -1,7 +1,7 @@
 #ifndef fc_vars_INCLUDED
 #define fc_vars_INCLUDED
 
-#include "telemetry.h"
+#include "telemetry_data.h"
 
 
 DECL_EXTERN_DATA_VAR(tdv_fc_state);

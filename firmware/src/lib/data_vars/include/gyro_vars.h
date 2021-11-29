@@ -1,7 +1,7 @@
 #ifndef gyro_vars_INCLUDED
 #define gyro_vars_INCLUDED
 
-#include "telemetry.h"
+#include "telemetry_data.h"
 
 DECL_EXTERN_DATA_VAR(tdv_gyro_spi_pins_in);     //
 DECL_EXTERN_DATA_VAR(tdv_gyro_spi_pins_out);    //

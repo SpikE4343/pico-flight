@@ -408,8 +408,8 @@ void osdInit()
 {
   printf("osd init begin\n");
 
-  telemetry_register(&tdv_osd_pin_sync);
-  telemetry_register(&tdv_osd_pin_out);
+  telemetry_register_var(&tdv_osd_pin_sync);
+  telemetry_register_var(&tdv_osd_pin_out);
 
   s.fbSize = LINE_COUNT * LINE_SIZE;
   s.frameBuffer = malloc(s.fbSize);

@@ -7,7 +7,7 @@ add_library(web_server
 
 target_link_libraries(web_server
   usb_network_stack
-  core-telemetry
+  core-telemetry-common
   data-vars
   lwip
   tinyusb_device

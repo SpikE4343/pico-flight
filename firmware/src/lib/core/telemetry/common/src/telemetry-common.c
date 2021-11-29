@@ -8,13 +8,26 @@
 #include <malloc.h>
 #include <stdio.h>
 
+//TODO: only for tools builds
+#define TELEMETRY_PRE_ALLOC 1
+
+typedef struct {
+  TDataVar_t* ptr;
+#if TELEMETRY_PRE_ALLOC
+  TDataVar_t var;
+#endif
+} TableNode_t;
+
 typedef struct
 {
-  TDataVar_t **dataTable;
+  TableNode_t* dataTable;
   uint32_t itemCount;
 
   TDataModPacket_t *valueMods;
   volatile uint32_t valueModCount;
+
+  char* st_head;
+  char* st_tail;
   
 
   uint32_t frameCount;
@@ -56,11 +69,55 @@ DEF_DATA_VAR(tdv_telemetry_val_count, 1024,
   "Maximum number of data vars that the system can store",
   u32, Tdm_RW | Tdm_config);
 
+
+DEF_DATA_VAR(tdv_telemetry_str_table, 0,
+  "telemetry.vars.strings.size",
+  "Size, in bytes, of string table for received descriptions",
+  u32, Tdm_RW | Tdm_config);
+
+DEF_DATA_VAR(tdv_telemetry_auto_register, false,
+  "telemetry.vars.auto_register",
+  "Maximum number of data vars that the system can store",
+  b8, Tdm_RW | Tdm_config);
+
 // ---------------------------------------------------------------
 void telemetry_mod_send_complete(int sentCount)
 {
   s.sending = false;
   //s.valueModCount -= sentCount;
+}
+
+// ---------------------------------------------------------------
+int string_table_size()
+{
+  return s.st_tail - s.st_head;
+}
+
+// ---------------------------------------------------------------
+char* string_table_reserve(uint32_t size)
+{
+  if(s.st_tail == NULL || s.st_head == NULL)
+    return NULL;
+
+  if( tdv_telemetry_str_table.v.u32 - string_table_size() < size+1)
+    return NULL;
+
+  char* start = s.st_tail;
+  s.st_tail += size+1;
+
+  return start;
+}
+
+// ---------------------------------------------------------------
+void string_table_reset()
+{
+  s.st_head = NULL;
+  s.st_tail = NULL;
+
+  if(tdv_telemetry_str_table.v.u32 > 0)
+  {
+    s.st_head = s.st_tail = malloc(tdv_telemetry_str_table.v.u32);
+  }
 }
 
 // ---------------------------------------------------------------
@@ -72,7 +129,7 @@ void telemetry_init()
 
 
   s.itemCount = 0;
-  int tableMemSize = sizeof(TDataVar_t*) * tdv_telemetry_val_count.v.u32;
+  int tableMemSize = sizeof(TableNode_t) * tdv_telemetry_val_count.v.u32;
   s.dataTable = malloc(tableMemSize);
   memset(s.dataTable, 0, tableMemSize);
 
@@ -81,17 +138,25 @@ void telemetry_init()
   s.valueMods = malloc(modsMemSize);
   memset(s.valueMods, 0, modsMemSize);
 
+
+
+  string_table_reset();
+
   s.frameCount = 0;
   s.frameTime = 0;
 
   tdv_telemetry_update_us.v.u32 = system_time_us();
 
-  telemetry_register(&tdv_next_desc_send);
-  telemetry_register(&tdv_telemetry_update_us);
-  telemetry_register(&tdv_telemetry_queue);
+  telemetry_register_var(&tdv_next_desc_send);
+  telemetry_register_var(&tdv_telemetry_update_us);
+  telemetry_register_var(&tdv_telemetry_queue);
 
   telemetry_native_init(telemetry_mod_send_complete);
 }
+
+
+
+
 
 // ---------------------------------------------------------------
 uint32_t index_table_get(TDataVar_t **t, uint32_t tableSize, uint32_t id)
@@ -114,28 +179,34 @@ void value_table_remove(uint32_t id)
   if (id < 1)
     return;
 
-  s.dataTable[id] = NULL;
+  s.dataTable[id].ptr = NULL;
 }
 
 // ---------------------------------------------------------------
 TDataVar_t *value_table_get(uint32_t id)
 {
-  return s.dataTable[id];
+  return s.dataTable[id].ptr;
 }
 
 // ---------------------------------------------------------------
-bool telemetry_register(TDataVar_t *dataVar)
+int telemetry_vars_count()
+{
+  return s.itemCount;
+}
+
+// ---------------------------------------------------------------
+bool telemetry_register_var(TDataVar_t *dataVar)
 {
   assert(dataVar->id == 0);
   uint32_t index = ++s.itemCount;
   dataVar->id = index;
-  s.dataTable[index] = dataVar;
+  s.dataTable[index].ptr = dataVar;
 
   return true;
 }
 
 // ---------------------------------------------------------------
-bool telemetry_register_array(TDataVar_t *dataVar, int count)
+bool telemetry_register_var_array(TDataVar_t *dataVar, int count)
 {
   TDataVar_t *v = dataVar;
   for (int i = 0; i < count; ++i, ++v)
@@ -143,14 +214,14 @@ bool telemetry_register_array(TDataVar_t *dataVar, int count)
     assert(v->id == 0);
     uint32_t index = ++s.itemCount;
     v->id = index;
-    s.dataTable[index] = v;
+    s.dataTable[index].ptr = v;
   }
 
   return true;
 }
 
 // ---------------------------------------------------------------
-void telemetry_sample(TDataVar_t *dataVar)
+void telemetry_sample_var(TDataVar_t *dataVar)
 {
   assert(dataVar->id != 0);
   if(telemetry_native_sending())
@@ -158,7 +229,7 @@ void telemetry_sample(TDataVar_t *dataVar)
   
   // buffer full
   // TODO: some usable error here
-  if (s.valueModCount >= s.cfg->valueModBufferCount)
+  if (s.valueModCount >= tdv_telemetry_sample_buffer_count.v.u32)
     return;
 
   int id = s.valueModCount++;
@@ -173,7 +244,7 @@ void telemetry_sample(TDataVar_t *dataVar)
 }
 
 // ---------------------------------------------------------------
-void telemetry_sample_at(TDataVar_t *dataVar, float now_us)
+void telemetry_sample_var_at(TDataVar_t *dataVar, float now_us)
 {
   if(telemetry_native_sending())
     return;
@@ -195,18 +266,18 @@ void telemetry_sample_at(TDataVar_t *dataVar, float now_us)
 }
 
 // ---------------------------------------------------------------
-void telemetry_sample_array(TDataVar_t *dataVar, int count)
+void telemetry_sample_var_array(TDataVar_t *dataVar, int count)
 {
   if(telemetry_native_sending())
     return;
   
   TDataVar_t *v = dataVar;
   for (int i = 0; i < count; ++i, ++v)
-    telemetry_sample(v);
+    telemetry_sample_var(v);
 }
 
 // ---------------------------------------------------------------
-void telemetry_set(uint32_t id, TValue_t value, bool force)
+void telemetry_set_var(uint32_t id, TValue_t value, bool force)
 {
   TDataVar_t *v = value_table_get(id);
   if (v == NULL)
@@ -217,28 +288,14 @@ void telemetry_set(uint32_t id, TValue_t value, bool force)
 
   v->v = value;
 
-  telemetry_sample(v);
+  telemetry_sample_var(v);
 }
 
 // ---------------------------------------------------------------
-TValue_t telemetry_get(uint32_t id)
-{
-  TValue_t null = {0};
-  TDataVar_t *v = value_table_get(id);
-  if (v == NULL)
-    return null;
-
-  return v->v;
-}
-
-// ---------------------------------------------------------------
-TDataValueDesc_t *telemetry_get_desc(uint32_t id)
+TDataVar_t* telemetry_get_var(uint32_t id)
 {
   TDataVar_t *v = value_table_get(id);
-  if (v == NULL)
-    return NULL;
-
-  return &v->meta;
+  return v;
 }
 
 // ---------------------------------------------------------------
@@ -272,6 +329,37 @@ uint8_t *write_string(uint8_t *buf, char *str)
 }
 
 // ---------------------------------------------------------------
+uint8_t* read_string(uint8_t *buf, char** outstr)
+{
+  uint8_t slen = buf[0];
+
+  char* str = string_table_reserve(slen);
+
+  if(str)
+  {
+    memcpy(str, buf + 1, slen);
+    *(str+slen) = 0;
+
+    int len = strlen(str);
+    assert(len == slen);
+    *outstr = str;
+  }
+  else
+  {
+    *outstr = NULL;
+  }
+  
+  return buf + slen + 1;
+}
+
+// ---------------------------------------------------------------
+uint8_t* read_bytes(uint8_t *buf, uint8_t *data, int len)
+{
+  memcpy(data, buf, len);
+  return buf + len;
+}
+
+// ---------------------------------------------------------------
 uint32_t __time_critical_func(telemetry_write_data_frame)(TDataModPacket_t *packet)
 {
   packet->header.marker = TELEMETRY_MARKER_BYTE;
@@ -299,6 +387,8 @@ uint32_t __time_critical_func(telemetry_write_desc_frame)(
   sp = write_bytes(sp, (uint8_t *)&var->id, sizeof(var->id));
   sp = write_bytes(sp, (uint8_t *)&var->meta.type, sizeof(var->meta.type));
   sp = write_bytes(sp, (uint8_t *)&var->meta.modsAllowed, sizeof(var->meta.modsAllowed));
+  
+  
   sp = write_string(sp, var->meta.name);
   sp = write_string(sp, var->meta.desc);
   packet->header.size = sp - payload;
@@ -307,7 +397,17 @@ uint32_t __time_critical_func(telemetry_write_desc_frame)(
   return sp - start;
 }
 
+
+
+
 static float last_ts = 0.0f;
+
+// ---------------------------------------------------------------
+void __time_critical_func(telemetry_update)()
+{
+   int max = 64;
+  telemetry_native_recv(max);
+}
 
 // ---------------------------------------------------------------
 void __time_critical_func(telemetry_send)(uint64_t start, uint64_t now)
@@ -317,9 +417,9 @@ void __time_critical_func(telemetry_send)(uint64_t start, uint64_t now)
   // if (dma_channel_is_busy(s.dmaId))
   //   return;
 
-  telemetry_sample(&tdv_telemetry_queue);
-  telemetry_sample(&tdv_telemetry_update_us);
-  telemetry_sample(&tdv_next_desc_send);
+  telemetry_sample_var(&tdv_telemetry_queue);
+  telemetry_sample_var(&tdv_telemetry_update_us);
+  telemetry_sample_var(&tdv_next_desc_send);
 
 
   tdv_telemetry_update_us.v.u32 = system_time_us();
@@ -355,7 +455,7 @@ void __time_critical_func(telemetry_send)(uint64_t start, uint64_t now)
     {
       if(!sendsampled)
       {
-        telemetry_sample(var);
+        telemetry_sample_var(var);
 
         TDataModPacket_t *packet = (s.valueMods + (s.valueModCount-1));
 
@@ -383,11 +483,13 @@ void __time_critical_func(telemetry_send)(uint64_t start, uint64_t now)
 
   uint32_t delta = system_time_us() - tdv_telemetry_update_us.v.u32;
   tdv_telemetry_update_us.v.u32 = delta;
-
-  int max = 64;
-  telemetry_native_recv(max);
 }
 
+
+
+
+// ---------------------------------------------------------------s
+// ---------------------------------------------------------------
 typedef enum
 {
   RECV_RESET = 0,
@@ -403,7 +505,8 @@ static PacketHeader_t header;
 typedef union
 {
   TDataValueMod_t dataMod;
-  TDataVar_t dataDescFrame;
+  uint8_t data[256];
+
 } Payloads_t;
 
 //TODO: make a union
@@ -414,21 +517,67 @@ uint8_t offset = 0;
 uint8_t crc;
 
 // ---------------------------------------------------------------
+// Node Version
+// void processDataFrame()
+// {
+//   if (payloads.dataMod.mod != Tdm_write)
+//     return;
+    
+//   telemetry_set_var(
+//     payloads.dataMod.value.id,
+//     payloads.dataMod.value.value, 
+//     false
+//     );
+// }
+
+// ---------------------------------------------------------------
 void processDataFrame()
 {
-  if (payloads.dataMod.mod != Tdm_write)
-    return;
+  // if (payloads.dataMod.mod != Tdm_write)
+  //   return;
     
-  telemetry_set(
+  telemetry_set_var(
     payloads.dataMod.value.id,
     payloads.dataMod.value.value, 
-    false
+    true
     );
 }
+
 
 // ---------------------------------------------------------------
 void processDataDescFrame()
 {
+  if(!tdv_telemetry_auto_register.v.b8)
+    return;
+
+  TDataVar_t var;
+
+  uint8_t* sp = payloads.data;
+  uint8_t size = header.size;
+
+  sp = read_bytes(sp, (uint8_t *)&var.id, sizeof(var.id));
+  sp = read_bytes(sp, (uint8_t *)&var.meta.type, sizeof(var.meta.type));
+  sp = read_bytes(sp, (uint8_t *)&var.meta.modsAllowed, sizeof(var.meta.modsAllowed));
+
+  char* name = NULL;
+  char* desc = NULL;
+  sp = read_string(sp, &name);
+  sp = read_string(sp, &desc);
+
+  var.meta.name = name;
+  var.meta.desc = desc;
+
+  int read = sp-payloads.data;
+  assert(read == size); 
+  TDataVar_t* v = value_table_get(var.id);
+
+  #if TELEMETRY_PRE_ALLOC
+  TableNode_t* node = s.dataTable+var.id;
+  v = node->ptr = &node->var;
+  #endif
+
+  v->id = var.id;
+  v->meta = var.meta;
 }
 
 // ---------------------------------------------------------------
@@ -482,7 +631,7 @@ void telemetry_recv(uint8_t byte)
         break;
 
       case PKT_DATA_DESC_FRAME:
-        buffer = (uint8_t *)&payloads.dataDescFrame;
+        buffer = (uint8_t *)&payloads.data;
         break;
 
       case PKT_NONE:

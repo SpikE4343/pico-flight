@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "flight_controller.h"
 
-#include "telemetry.h"
+#include "telemetry_data.h"
 
 // ---------------------------------------------------------------
 DEF_DATA_VAR(tdv_fc_state, 0, 

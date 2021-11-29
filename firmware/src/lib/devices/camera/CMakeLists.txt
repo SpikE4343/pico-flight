@@ -10,6 +10,6 @@ target_include_directories(camera INTERFACE
 target_link_libraries(camera INTERFACE 
   pico_stdlib 
   hardware_i2c
-  core-telemetry
+  core-telemetry-common
   data-vars
   )

@@ -9,5 +9,5 @@ target_include_directories(data-vars INTERFACE
 )
 
 target_link_libraries(data-vars INTERFACE
-    core-telemetry
+    core-telemetry-common
 )

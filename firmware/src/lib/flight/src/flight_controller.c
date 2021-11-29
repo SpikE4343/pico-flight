@@ -332,7 +332,7 @@ void flightControlUpdate()
   if (next != tdv_fc_state.v.u32)
   {
     tdv_fc_state.v.u32 = next;
-    telemetry_sample(&tdv_fc_state);
+    telemetry_sample_var(&tdv_fc_state);
   }
 
   motorMixerCalculateOutputs(tdv_fc_attitude_outputs, tdv_motor_output, tdv_motor_count.v.u8);
@@ -391,46 +391,46 @@ void flightPrintTask()
   uint64_t time = system_time_us();
 
   // telemetry_sample_array(tdv_fc_rates_raw, 3);
-  telemetry_sample_array(tdv_fc_rates_filtered, 3);
-  telemetry_sample_array(tdv_motor_output, tdv_motor_count.v.u32);
-  telemetry_sample_array(tdv_motor_out_cmd, tdv_motor_count.v.u32);
+  telemetry_sample_var_array(tdv_fc_rates_filtered, 3);
+  telemetry_sample_var_array(tdv_motor_output, tdv_motor_count.v.u32);
+  telemetry_sample_var_array(tdv_motor_out_cmd, tdv_motor_count.v.u32);
 
-  //telemetry_sample_array(tdv_motor_output, tdv_motor_count.v.u8);
+  //telemetry_sample_var_array(tdv_motor_output, tdv_motor_count.v.u8);
 
-  telemetry_sample(&tdv_fc_armed);
-  // telemetry_sample(&tdv_fc_gyro_updates);
-  telemetry_sample(&tdv_fc_state);
-  // telemetry_sample(&tdv_fc_control_updates);
+  telemetry_sample_var(&tdv_fc_armed);
+  // telemetry_sample_var(&tdv_fc_gyro_updates);
+  telemetry_sample_var(&tdv_fc_state);
+  // telemetry_sample_var(&tdv_fc_control_updates);
 
-  telemetry_sample(&tdv_fc_core0_counter);
-  telemetry_sample(&tdv_fc_core1_counter);
+  telemetry_sample_var(&tdv_fc_core0_counter);
+  telemetry_sample_var(&tdv_fc_core1_counter);
 
-  telemetry_sample(&tdv_fc_gyro_update_us);
+  telemetry_sample_var(&tdv_fc_gyro_update_us);
 
-  telemetry_sample(&tdv_rc_uart_rx_bytes);
+  telemetry_sample_var(&tdv_rc_uart_rx_bytes);
 
-  // telemetry_sample_array(tdv_fc_attitude_outputs, 4);
-  telemetry_sample_array(tdv_rc_input, 8);
-  telemetry_sample(&tdv_rc_rssi);
-  telemetry_sample(&tdv_rc_packet_loss);
-  telemetry_sample(&tdv_rc_frames_recv);
+  // telemetry_sample_var_array(tdv_fc_attitude_outputs, 4);
+  telemetry_sample_var_array(tdv_rc_input, 8);
+  telemetry_sample_var(&tdv_rc_rssi);
+  telemetry_sample_var(&tdv_rc_packet_loss);
+  telemetry_sample_var(&tdv_rc_frames_recv);
 
   tdv_rc_packet_loss.v.u32 = 0;
   tdv_rc_frames_recv.v.u32 = 0;
 
-  // telemetry_sample_array(&tdv_fc_pidf_v_roll, 4);
-  // telemetry_sample_array(&tdv_fc_pidf_v_pitch, 4);
-  // telemetry_sample_array(&tdv_fc_pidf_v_yaw, 4);
+  // telemetry_sample_var_array(&tdv_fc_pidf_v_roll, 4);
+  // telemetry_sample_var_array(&tdv_fc_pidf_v_pitch, 4);
+  // telemetry_sample_var_array(&tdv_fc_pidf_v_yaw, 4);
 
-  telemetry_sample_array(tdv_fc_pid_sum, 3);
-  // telemetry_sample_array(&tdv_fc_pid_sp, 3);
-  // telemetry_sample_array(&tdv_fc_pid_sp_error, 3);
-  // telemetry_sample_array(&tdv_fc_pid_sp_delta, 3);
-  // telemetry_sample_array(&tdv_fc_pid_pv_error, 3);
-  // telemetry_sample_array(&tdv_fc_pid_pv, 3);
+  telemetry_sample_var_array(tdv_fc_pid_sum, 3);
+  // telemetry_sample_var_array(&tdv_fc_pid_sp, 3);
+  // telemetry_sample_var_array(&tdv_fc_pid_sp_error, 3);
+  // telemetry_sample_var_array(&tdv_fc_pid_sp_delta, 3);
+  // telemetry_sample_var_array(&tdv_fc_pid_pv_error, 3);
+  // telemetry_sample_var_array(&tdv_fc_pid_pv, 3);
 
-  // telemetry_sample(&tdv_rc_uart_rx_bytes);
-  // telemetry_sample(&tdv_rc_uart_tx_bytes);
+  // telemetry_sample_var(&tdv_rc_uart_rx_bytes);
+  // telemetry_sample_var(&tdv_rc_uart_tx_bytes);
   
   // sprintf(buffer, "% u    ", tdv_fc_core0_counter.v.u32);
   // osdDrawString(10, 90, buffer);
@@ -443,6 +443,7 @@ void flightPrintTask()
 
   
   telemetry_send(state.startupMs, time);
+  telemetry_update();
 
   //osdDraw( 40 + (x++ * 8) % 100, (x / 100)+25,1);
   // osdDraw( (x) % 515, 11, (x % 4) > 0);

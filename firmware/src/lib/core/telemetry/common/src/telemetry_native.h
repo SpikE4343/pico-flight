@@ -11,5 +11,7 @@ void telemetry_native_send(int length, uint8_t* packets, int packetCount);
 void telemetry_native_recv(int max);
 bool telemetry_native_sending();
 
+// TODO: add malloc functions
+
 
 #endif

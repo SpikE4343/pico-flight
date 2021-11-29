@@ -1,7 +1,7 @@
 #ifndef rc_vars_INCLUDED
 #define rc_vars_INCLUDED
 
-#include "telemetry.h"
+#include "telemetry_data.h"
 
 DECL_EXTERN_DV_ARRAY(tdv_rc_input);
 DECL_EXTERN_DV_ARRAY(tdv_rc_mapping);

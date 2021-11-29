@@ -5,4 +5,4 @@ __pycache__
 tools/telemetry/pystuff/
 
 .env/
-tools/external/of_v0.11.2/
+tools/external/

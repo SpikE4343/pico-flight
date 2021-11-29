@@ -14,7 +14,7 @@ target_include_directories(motor-output INTERFACE
 
 target_link_libraries(motor-output INTERFACE
     core-math
-    core-telemetry
+    core-telemetry-common
     data-vars
     motor-common
 )
