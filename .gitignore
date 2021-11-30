@@ -3,6 +3,5 @@ builds/
 tools/configurator/build*
 __pycache__
 tools/telemetry/pystuff/
-
+imgui.ini
 .env/
-tools/external/

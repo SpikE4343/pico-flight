@@ -8,9 +8,6 @@
 #include <malloc.h>
 #include <stdio.h>
 
-//TODO: only for tools builds
-#define TELEMETRY_PRE_ALLOC 1
-
 typedef struct {
   TDataVar_t* ptr;
 #if TELEMETRY_PRE_ALLOC

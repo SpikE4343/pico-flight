@@ -1,3 +1,6 @@
 [submodule "firmware/src/lib/net/lwip/lib/lwip"]
 	path = firmware/src/lib/net/lwip/lib/lwip
 	url = git://git.savannah.nongnu.org/lwip.git
+[submodule "tools/external/imgui"]
+	path = tools/external/imgui
+	url = https://github.com/ocornut/imgui.git

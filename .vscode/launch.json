@@ -54,7 +54,7 @@
       "name": "Tools: Telemetry",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/builds/tools/tools/telemetry/sdl-nuklear/telepi",
+      "program": "${workspaceFolder}/builds/tools/tools/telemetry/imgui/pico-flight-gui",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",

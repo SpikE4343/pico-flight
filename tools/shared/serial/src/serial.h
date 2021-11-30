@@ -4,7 +4,7 @@
 
 
 bool serial_init();
-bool serial_open();
+bool serial_open(const char* port, int baud);
 bool serial_close();
 
 int serial_read(uint8_t* destination, int size);
