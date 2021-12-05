@@ -4,7 +4,8 @@
 
 
 bool serial_init();
-bool serial_open(const char* port, int baud);
+void serial_stats(uint32_t* r, uint32_t* w);
+bool serial_open(const char* port, int baud, bool isFile=false, bool logToFile=false);
 bool serial_close();
 
 int serial_read(uint8_t* destination, int size);

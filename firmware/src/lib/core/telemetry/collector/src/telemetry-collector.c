@@ -238,7 +238,7 @@ TValue_t telemetry_node_get(uint32_t id)
 }
 
 // ---------------------------------------------------------------
-TDataValueDesc_t *telemetry_node_get_desc(uint32_t id)
+TDataVarDesc_t *telemetry_node_get_desc(uint32_t id)
 {
   TDataVar_t *v = value_table_get(id);
   if (v == NULL)

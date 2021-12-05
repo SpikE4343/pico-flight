@@ -4,3 +4,6 @@
 [submodule "tools/external/imgui"]
 	path = tools/external/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "firmware/src/lib/io/littlefs"]
+	path = firmware/src/lib/io/littlefs
+	url = git@github.com:littlefs-project/littlefs.git

@@ -25,7 +25,7 @@ void telemetry_node_sample_array(TDataVar_t* dataVar, int count);
 
 int telemetry_node_count();
 TValue_t telemetry_node_get(uint32_t id);
-TDataValueDesc_t *telemetry_node_get_desc(uint32_t id);
+TDataVarDesc_t *telemetry_node_get_desc(uint32_t id);
 
 
 #endif

@@ -45,6 +45,7 @@
       "svdFile": "/home/john/code/pico/pico-sdk/src/rp2040/hardware_regs/rp2040.svd",
       "runToMain": true,
       // Work around for stopping at main on restart
+      "preLaunchTask": "Build Firmware",
       "postRestartCommands": [
         "break main",
         "continue"
@@ -57,10 +58,11 @@
       "program": "${workspaceFolder}/builds/tools/tools/telemetry/imgui/pico-flight-gui",
       "args": [],
       "stopAtEntry": false,
-      "cwd": "${fileDirname}",
+      "cwd": "${workspaceFolder}/tools/telemetry/imgui",
       "environment": [],
       "externalConsole": false,
       "MIMode": "gdb",
+      "preLaunchTask": "Build Tools",
       "setupCommands": [
           {
               "description": "Enable pretty-printing for gdb",
@@ -68,6 +70,7 @@
               "ignoreFailures": true
           }
       ]
+
     }
   ]
 }

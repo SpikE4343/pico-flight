@@ -16,6 +16,31 @@
 
 #define TELEMETRY_MARKER_BYTE 0x7C
 
+// Kaitai struct
+/*
+meta:
+  id: test
+  file-extension: raw
+seq:
+  - id: pkt
+    type: packet
+    repeat: eos
+types:
+  packet:
+    seq:
+      - id: marker
+        contents: '|'
+      - id: type
+        type: u1
+      - id: length
+        type: u1
+      - id: body
+        size: length
+      - id: checksum
+        type: u1
+*/
+
+
 // ---------------------------------------------------------------
 typedef enum {
     Tdt_u8=0,
@@ -40,6 +65,9 @@ typedef enum {
     Tdm_restart_requ= 1 << 2,
     Tdm_config= 1 << 3,
     Tdm_realtime = 1 << 4,
+
+    // all
+    Tdm_all = Tdm_read | Tdm_write | Tdm_restart_requ | Tdm_config | Tdm_realtime,
 } TDataModType_t;
 
 // ---------------------------------------------------------------
@@ -97,13 +125,29 @@ typedef struct {
   uint8_t modsAllowed;
   char* name; // string
   char* desc; // string
-} __packed TDataValueDesc_t;
+} /*__packed*/ TDataVarDesc_t;
+
+// ---------------------------------------------------------------
+// Configuration info
+// TODO: how to store list of options?
+typedef struct {
+  TDataValue_t min;
+  TDataValue_t max;
+  TDataValue_t step;
+} TDataVarConfig_t;
+
+// ---------------------------------------------------------------
+typedef struct {
+  uint32_t lastSampleTime;
+  uint8_t samplesPerSecond;
+  bool active;
+} TDataVarSampleRate_t;
 
 // ---------------------------------------------------------------
 typedef struct {
   uint32_t id;
   TValue_t v;
-  TDataValueDesc_t meta;
+  TDataVarDesc_t meta;
 } TDataVar_t;
 
 // ---------------------------------------------------------------

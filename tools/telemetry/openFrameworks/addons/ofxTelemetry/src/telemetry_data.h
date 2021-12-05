@@ -98,12 +98,12 @@ typedef struct {
   uint8_t modsAllowed;
   char* name; // string
   char* desc; // string
-} __packed TDataValueDesc_t;
+} __packed TDataVarDesc_t;
 
 typedef struct {
   uint32_t id;
   TValue_t v;
-  TDataValueDesc_t meta;
+  TDataVarDesc_t meta;
 } TDataVar_t;
 
 // descriptions of available values

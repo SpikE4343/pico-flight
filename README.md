@@ -48,18 +48,24 @@ make
     - [ ] Telemetry
     - [x] Add config data to telemetry
       - [x] Allow device to accept value mod messages to write to config data
-      - [ ] Read/Write to "file" all config vars
-      - [ ] Logging to flash/sdcard
+      - [ ] Add littlefs for flash file storage
+        - [ ] Read/Write to "file" all config vars
+          - [x] Write of text based config vars 
+        - [ ] Logging to flash/sdcard
+        
+        
     - [ ] Configurator
       - [ ] Native
         - [x] Openframeworks based via serial port with read/write support
           * OF dependency is pretty large and I lost the ofApp.cpp file :(
-        - [ ] Reimplementing using https://github.com/Immediate-Mode-UI/Nuklear and SDL/OpenGL
+        - [x] Reimplementing using https://github.com/Immediate-Mode-UI/Nuklear and SDL/OpenGL
+        - [x] Reimplemented using Dear Imgui
+          - [ ] Debug why settings not applying on device when sent from tool
     - Web
       - [x] usb network endpoint
         - [x] basic http server 
         - [ ] route handling for subsystems
-    - [ ] Host on device mass storage
+    - [ ] Host on device flash
       - [ ] Store current settings in human readable format.
       - [ ] Keep a backup of last settings?
     

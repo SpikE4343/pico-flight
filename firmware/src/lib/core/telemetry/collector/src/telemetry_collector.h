@@ -4,7 +4,7 @@
 #include "telemetry_data.h"
 
 
-typedef void (*telemetry_collector_desc_callback_t)(TDataValueDesc_t* desc);
+typedef void (*telemetry_collector_desc_callback_t)(TDataVarDesc_t* desc);
 
 typedef struct {
   int valueTableCount;
