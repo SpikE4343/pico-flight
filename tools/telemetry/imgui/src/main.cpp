@@ -131,6 +131,18 @@ void applyFlatTheme()
     auto& style = ImGui::GetStyle();
     ImVec4* colors = style.Colors;
 
+    ImVec4 accent(0.11f, 0.93f, 0.86f, 1.00f);
+    ImVec4 accentHSV(0,0,0,1.0f);
+
+    ImGui::ColorConvertRGBtoHSV(
+        accent.x, accent.y, accent.z, 
+        accentHSV.x, accentHSV.y, accentHSV.z);
+
+    accentHSV.z *= 0.70f;
+    ImGui::ColorConvertHSVtoRGB(
+        accentHSV.x, accentHSV.y, accentHSV.z, 
+        accent.x, accent.y, accent.z);
+
     colors[ImGuiCol_Text]                   = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
     colors[ImGuiCol_TextDisabled]           = ImVec4(0.59f, 0.59f, 0.59f, 1.00f);
     colors[ImGuiCol_WindowBg]               = ImVec4(0.15f, 0.15f, 0.15f, 1.00f);
@@ -142,7 +154,7 @@ void applyFlatTheme()
     colors[ImGuiCol_FrameBgHovered]         = ImVec4(0.11f, 0.93f, 0.86f, 1.00f);
     colors[ImGuiCol_FrameBgActive]          = ImVec4(0.11f, 0.93f, 0.86f, 0.90f);//ImVec4(0.00f, 0.78f, 0.70f, 1.00f);
     colors[ImGuiCol_TitleBg]                = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
-    colors[ImGuiCol_TitleBgActive]          = ImVec4(0.11f, 0.93f, 0.86f, 1.00f);
+    colors[ImGuiCol_TitleBgActive]          = accent;//ImVec4(0.11f, 0.93f, 0.86f, 1.00f);
     colors[ImGuiCol_TitleBgCollapsed]       = ImVec4(0.15f, 0.15f, 0.15f, 1.00f);
     colors[ImGuiCol_MenuBarBg]              = ImVec4(0.20f, 0.20f, 0.22f, 1.00f);
     colors[ImGuiCol_ScrollbarBg]            = ImVec4(0.20f, 0.20f, 0.22f, 1.00f);
@@ -498,7 +510,7 @@ int main(int, char **)
                 if (ImGui::Button("Disconnect"))
                     serial_close();
             }
-            else
+            else 
             {
                 if (ImGui::Button("Connect"))
                     serial_open(port, baud, serialIsFile, serialLogToFile);
@@ -668,7 +680,12 @@ int main(int, char **)
                             .payload = {
                                 .mod = Tdm_write,
                                 .time = 0,
-                                .value = v->v
+                                .value = {
+                                    .id = v->id,
+                                    .type = v->meta.type,
+                                    .value = v->v
+                                    }
+                                
                                 }
                         };
 

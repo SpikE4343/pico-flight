@@ -702,6 +702,12 @@ void processDataDescFrame()
   uint8_t size = header.size;
 
   sp = read_bytes(sp, (uint8_t *)&var.id, sizeof(var.id));
+
+  TDataVar_t* v = value_table_get(var.id);
+  if( v && v->meta.name)
+    return;
+
+
   sp = read_bytes(sp, (uint8_t *)&var.meta.type, sizeof(var.meta.type));
   sp = read_bytes(sp, (uint8_t *)&var.meta.modsAllowed, sizeof(var.meta.modsAllowed));
   sp = read_bytes(sp, (uint8_t *)&var.v, sizeof(var.v));
@@ -716,7 +722,6 @@ void processDataDescFrame()
 
   int read = sp-payloads.data;
   assert(read == size); 
-  TDataVar_t* v = value_table_get(var.id);
 
   #if TELEMETRY_PRE_ALLOC
   TableNode_t* node = s.dataTable+var.id;
