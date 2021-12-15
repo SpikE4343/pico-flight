@@ -104,7 +104,7 @@ void io_rc_init()
   // init uart
   uart_init(s.uart, BAUD_RATE);
 
-  gpio_set_function(tdv_rc_uart_pins_tx.v.u8, GPIO_FUNC_UART);
+  gpio_set_function(tdv_rc_uart_pins_rx.v.u8, GPIO_FUNC_UART);
   gpio_set_function(tdv_rc_uart_pins_tx.v.u8, GPIO_FUNC_UART);
 
   // int actual = uart_set_baudrate(s.uart, BAUD_RATE);

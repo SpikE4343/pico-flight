@@ -7,3 +7,9 @@
 [submodule "firmware/src/lib/io/littlefs"]
 	path = firmware/src/lib/io/littlefs
 	url = git@github.com:littlefs-project/littlefs.git
+[submodule "tools/external/mahi-gui"]
+	path = tools/external/mahi-gui
+	url = git@github.com:mahilab/mahi-gui.git
+[submodule "tools/external/implot"]
+	path = tools/external/implot
+	url = git@github.com:epezent/implot.git

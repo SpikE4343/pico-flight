@@ -9,7 +9,7 @@
 #include "hardware/timer.h"
 #include "hardware/gpio.h"
 #include "pico/multicore.h"
-#include "web_server.h"
+// #include "web_server.h"
 
 #include "filters.h"
 #include "flight_controller.h"
@@ -21,7 +21,7 @@
 #include "motor_mixer.h"
 #include "motor_output.h"
 #include "data_vars.h"
-#include "camera.h"
+// #include "camera.h"
 
 #include "math.h"
 #include "system.h"
@@ -144,7 +144,7 @@ void flightInit()
   int core1_init = multicore_fifo_pop_blocking();
 
   io_rc_init();
-  osdInit();
+  // osdInit();
   // camera_init();
   
 

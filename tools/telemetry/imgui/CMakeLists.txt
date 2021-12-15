@@ -12,6 +12,7 @@
 
 
 add_executable(pico-flight-gui
+${CMAKE_CURRENT_LIST_DIR}/src/data_var_ui.cpp
 ${CMAKE_CURRENT_LIST_DIR}/src/main.cpp
         )
 

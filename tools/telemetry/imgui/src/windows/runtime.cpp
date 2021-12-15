@@ -14,13 +14,10 @@ extern "C"
 #include "telemetry_native.h"
 #include "serial.h"
 
-
-
 #ifdef __cplusplus
 }
 #endif
 
-#include "data_var_ui.h"
 
 #include <map>
 #include <vector>
@@ -319,6 +316,14 @@ void embraceTheDarkness()
   style.GrabRounding                      = 3;
   style.LogSliderDeadzone                 = 4;
   style.TabRounding                       = 4;
+}
+
+
+bool InputUInt32(const char* label, uint32_t* v, int step = 1, int step_fast = 100, ImGuiInputTextFlags flags = 0)
+{
+     // Hexadecimal input provided as a convenience but the flag name is awkward. Typically you'd use InputText() to parse your own data, if you want to handle prefixes.
+    const char* format = (flags & ImGuiInputTextFlags_CharsHexadecimal) ? "%08X" : "%d";
+    return ImGui::InputScalar(label, ImGuiDataType_U32, (void*)v, (void*)(step > 0 ? &step : NULL), (void*)(step_fast > 0 ? &step_fast : NULL), format, flags);
 }
 
 void ShowDockSpace()
@@ -661,14 +666,60 @@ int main(int, char **)
                     // Value
                     ImGui::TableNextColumn();    
 
-                    ShowDataVarEditor(v);
-                    
+                    bool canWrite = v->meta.modsAllowed & Tdm_write;
+                    bool modified = false;
+                    float sv = 0.0f;
+                    int32_t i32 = v->v.i32;
+                    uint32_t u32 = v->v.u32;
+                    bool b8 = v->v.b8;
+                    float f32 = v->v.f32;
 
-                    
+                    switch (v->meta.type)
+                    {
+                    case Tdt_u8:
+                    case Tdt_u16:
+                    case Tdt_u32:
+                        if(canWrite)
+                            modified = InputUInt32("",&u32 );
+                        else
+                            ImGui::Text("%u", v->v.u32);
+
+                        sv = (float)(v->v.u32 = u32);
+                        // ImGui::InputInt("",(int*)&v->v.u32 );
+                        break;
+
+                    case Tdt_i8:
+                    case Tdt_i16:
+                    case Tdt_i32:
+                        if(canWrite)
+                            modified = ImGui::InputInt("",&i32 );
+                        else
+                            ImGui::Text("%d", v->v.i32);
+
+                        sv = (float)(v->v.i32 = i32);
+                        break;
+
+                    case Tdt_c8:
+                    case Tdt_b8:
+                        modified = ImGui::Checkbox("", &b8);
+                        sv = (float)(v->v.b8 = b8);
+                        break;
+
+                    case Tdt_f32:
+                        if(canWrite)
+                            modified = ImGui::InputFloat("",&f32 );
+                        else
+                            ImGui::Text("%f", f32);
+                        sv = v->v.f32 = f32;
+                        break;
+                        
+                    default:
+                        break;
+                    }
+
+                    TSampleData_t& samplesData = samples[id];
                     
                     ImGui::TableNextColumn();
-                    
-                    TSampleData_t& samplesData = samples[id];
 
                     if( !samplesData.values.empty() && v->meta.modsAllowed & Tdm_realtime)
                     {
@@ -691,9 +742,28 @@ int main(int, char **)
                         //     );
                     }
 
+                    if( modified )
+                    {
+                        
+                        TDataModPacket_t packet = {
+                            .payload = {
+                                .mod = Tdm_write,
+                                .time = 0,
+                                .value = {
+                                    .id = v->id,
+                                    .type = v->meta.type,
+                                    .value = v->v
+                                    }
+                                
+                                }
+                        };
 
 
-                    
+                        int sendLength = telemetry_write_data_frame(&packet);
+
+                        telemetry_native_send(sendLength, (uint8_t*)&packet, 1);
+                    }
+
                     // Description
                     ImGui::TableNextColumn();
                     ImGui::Text("%s", v->meta.desc);
@@ -701,8 +771,6 @@ int main(int, char **)
                     ImGui::PopID();
                     if(sampleValues)
                     {
-                        float sv = telemetry_var_get_float(v);
-
                         if(samplesData.values.empty())
                         {
                             samplesData.graphStart = 0;

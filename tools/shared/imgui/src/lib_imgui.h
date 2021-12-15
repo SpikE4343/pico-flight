@@ -3,6 +3,7 @@
 
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
+#include "implot.h"
 #include <stdio.h>
 #include <SDL.h>
 #include <SDL_opengl.h>

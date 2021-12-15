@@ -16,7 +16,7 @@ typedef struct {
 void telemetry_init();
 void telemetry_update();
 
-void telemetry_send();
+void telemetry_send(uint64_t start, uint64_t now);
 void telemetry_recv(uint8_t byte);
 
 void telemetry_set_desc_callback(telemetry_desc_callback_t callback);
@@ -31,6 +31,8 @@ void telemetry_sample_var_at(TDataVar_t* dataVar, float now);
 void telemetry_sample_var_array(TDataVar_t* dataVar, int count);
 
 bool telemetry_write_all_to_file(const char* filename, uint32_t modsFilter);
+
+float telemetry_var_get_float(TDataVar_t*v);
 
 int telemetry_var_count();
 TDataVar_t* telemetry_get_var(uint32_t id);

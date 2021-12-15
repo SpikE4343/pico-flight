@@ -412,6 +412,37 @@ TDataVar_t* telemetry_get_var(uint32_t id)
 }
 
 // ---------------------------------------------------------------
+float telemetry_var_get_float(TDataVar_t*v)
+{
+  switch (v->meta.type)
+    {
+    case Tdt_u8:
+    case Tdt_u16:
+    case Tdt_u32:
+        return (float)v->v.u32;
+
+    case Tdt_i8:
+    case Tdt_i16:
+    case Tdt_i32:
+        return (float)v->v.i32;
+        break;
+
+    case Tdt_c8:
+    case Tdt_b8:
+        return (float)v->v.b8;
+
+    case Tdt_f32:
+        return v->v.f32;
+        break;
+
+    default:
+        break;
+    }
+
+    return 0.0f;
+}
+
+// ---------------------------------------------------------------
 uint8_t telemetry_calc_crc(uint8_t *buf, uint8_t size)
 {
   uint8_t crc = *buf;
