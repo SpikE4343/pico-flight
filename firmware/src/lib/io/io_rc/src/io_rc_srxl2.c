@@ -116,7 +116,7 @@ void io_rc_protocol_update()
       }
       else
       {
-        srxlRun(0, 4);
+        // srxlRun(0, 4);
       }
     }
     break;
@@ -158,6 +158,8 @@ void io_rc_protocol_update()
     break;
     }
   }
+
+  srxlRun(0, 4);
 }
 
 // ---------------------------------------------------------------

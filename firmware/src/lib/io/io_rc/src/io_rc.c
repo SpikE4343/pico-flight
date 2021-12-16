@@ -34,8 +34,9 @@ typedef struct
 
 static io_rc_state_t s;
 
-#define BAUD_RATE 400000 //115200
+// #define BAUD_RATE 400000 //115200
 //#define BAUD_RATE 115200
+#define BAUD_RATE 416666
 #define DATA_BITS 8
 #define STOP_BITS 1
 #define PARITY UART_PARITY_NONE
@@ -178,13 +179,13 @@ DEF_DATA_VAR(tdv_rc_uart_id, 1,
   u8, Tdm_RW | Tdm_config);
 
 // ---------------------------------------------------------------
-DEF_DATA_VAR(tdv_rc_uart_pins_tx, 21, 
+DEF_DATA_VAR(tdv_rc_uart_pins_tx, 20, 
   "rc.uart.pins.tx",
   "Id of gpio pin to use for transmit",
   u8, Tdm_RW | Tdm_config);
 
 // ---------------------------------------------------------------
-DEF_DATA_VAR(tdv_rc_uart_pins_rx, 20, 
+DEF_DATA_VAR(tdv_rc_uart_pins_rx, 21, 
   "rc.uart.pins.rx",
   "Id of gpio pin to use for receive",
   u8, Tdm_RW | Tdm_config);
