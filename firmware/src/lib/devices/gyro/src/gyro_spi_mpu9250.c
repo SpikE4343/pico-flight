@@ -331,13 +331,42 @@ GyroState_t *gyroState()
 }
 
 // ---------------------------------------------------------------
-void gyroConfigure()
+void gyroConfigure6000()
+{
+  printf("mpu6000 reset\n");
+  gyroWriteRegister(MPU_RA_PWR_MGMT_1, MPU9250_BIT_RESET);
+  sleep_ms(100);
+
+  printf("mpu6000 reset signal paths\n");
+  // reset the device signal paths
+  gyroWriteRegister(MPU_RA_SIGNAL_PATH_RESET, BIT_GYRO | BIT_ACC | BIT_TEMP);
+  sleep_ms(100);  // datasheet specifies a 100ms delay after signal path reset
+
+  
+  uint8_t who = gyroReadRegister(MPU_RA_WHO_AM_I);
+
+  printf("mpu6000 WHO AM I: %02X\n", who);
+
+  gyroWriteRegister(MPU_RA_PWR_MGMT_1, INV_CLK_PLL);
+  gyroWriteRegister(MPU_RA_CONFIG, 0);//7);
+  gyroWriteRegister(MPU_RA_GYRO_CONFIG, (INV_FSR_1000DPS << 3));
+  gyroWriteRegister(MPU_RA_SMPLRT_DIV, 0);
+
+  gyroWriteRegister(MPU_RA_ACCEL_CONFIG, INV_FSR_16G << 3);
+  gyroWriteRegister(MPU_RA_INT_PIN_CFG, 0 << 7 | 0 << 6 | 0 << 5 | 1 << 4 | 0 << 3 | 0 << 2 | 1 << 1 | 0 << 0); // INT_ANYRD_2CLEAR, BYPASS_EN
+  gyroWriteRegister(MPU_RA_INT_ENABLE, 0x01);
+
+  spi_set_baudrate(s.spi, tdv_gyro_spi_clk_rates_hz.v.u32);
+  printf("mpu6000 configured\n");
+}
+
+// ---------------------------------------------------------------
+void gyroConfigure9250()
 {
   printf("gyro reset\n");
   gyroWriteRegister(MPU_RA_PWR_MGMT_1, MPU9250_BIT_RESET);
 
   sleep_ms(50);
-
   
   printf("gyro configure: %02X\n", gyroReadRegister(MPU_RA_WHO_AM_I));
 
@@ -352,6 +381,13 @@ void gyroConfigure()
 
   spi_set_baudrate(s.spi, tdv_gyro_spi_clk_rates_hz.v.u32);
   printf("gyro configured\n");
+}
+
+// ---------------------------------------------------------------
+void gyroConfigure()
+{
+  gyroConfigure6000();
+  // gyroConfigure9250();
 }
 
 // ---------------------------------------------------------------

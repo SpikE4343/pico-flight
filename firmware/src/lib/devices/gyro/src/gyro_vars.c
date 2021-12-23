@@ -57,7 +57,7 @@ DEF_DATA_VAR(tdv_gyro_spi_pins_select, 1,
   u32, Tdm_RW | Tdm_config);
 
 // ---------------------------------------------------------------
-DEF_DATA_VAR(tdv_gyro_spi_clk_reg_hz, 8000000, 
+DEF_DATA_VAR(tdv_gyro_spi_clk_reg_hz, 1000000, 
   "gyro.spi.clock.registers",
   "Gyro SPI clock speed for reading/writing registers",
   u32, Tdm_RW | Tdm_config);
