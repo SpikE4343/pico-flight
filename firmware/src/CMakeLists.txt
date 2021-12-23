@@ -16,8 +16,8 @@ if(NOT PF_BUILD_TOOLS)
     )
 
   # enable usb output, disable uart output
-  # pico_enable_stdio_usb(pico-flight 1)
-  pico_enable_stdio_uart(pico-flight 1)
+  pico_enable_stdio_usb(pico-flight 1)
+  pico_enable_stdio_uart(pico-flight 0)
 
   # create map/bin/hex/uf2 file etc.
   pico_add_extra_outputs(pico-flight)
