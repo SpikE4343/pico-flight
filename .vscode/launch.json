@@ -31,7 +31,7 @@
     {
       "name": "Pico Debug",
       "cwd": "${workspaceRoot}",
-      "executable": "${workspaceFolder}/builds/firmware/firmware/src/pico-flight.elf",
+      "executable": "${workspaceFolder}/builds/firmware/firmware/src/pico-flight",
       "request": "launch",
       "type": "cortex-debug",
       "servertype": "openocd",
@@ -63,6 +63,25 @@
       "externalConsole": false,
       "MIMode": "gdb",
       "preLaunchTask": "Build Tools",
+      "setupCommands": [
+          {
+              "description": "Enable pretty-printing for gdb",
+              "text": "-enable-pretty-printing",
+              "ignoreFailures": true
+          }
+      ]
+    },
+    {
+      "name": "Tools: PulseView",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/../../../sigrok/pulseview/build/pulseview",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}/../../../sigrok/pulseview/build/",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
       "setupCommands": [
           {
               "description": "Enable pretty-printing for gdb",

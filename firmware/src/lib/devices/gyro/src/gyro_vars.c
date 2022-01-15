@@ -27,37 +27,39 @@ DEF_DATA_VAR(tdv_gyro_rate_scale, 1000 / (float)((65535.0/2.0)),
   f32, Tdm_RW | Tdm_config);
 
 // ---------------------------------------------------------------
-DEF_DATA_VAR(tdv_gyro_rdy_pin, 4, 
-  "gyro.data_ready.pin",
-  "Pin where gyro will raise \"data ready\" signal",
-  u32, Tdm_RW | Tdm_config);
-
+// SPI
 // ---------------------------------------------------------------
-DEF_DATA_VAR(tdv_gyro_spi_pins_in, 0, 
+DEF_DATA_VAR(tdv_gyro_spi_pins_in, 4, 
   "gyro.spi.pins.in",
   "Gyro SPI data input gpio pin",
   u32, Tdm_RW | Tdm_config);
 
 // ---------------------------------------------------------------
-DEF_DATA_VAR(tdv_gyro_spi_pins_out, 3, 
-  "gyro.spi.pins.out",
-  "Gyro SPI data ouput gpio pin",
-  u32, Tdm_RW | Tdm_config);
-
-// ---------------------------------------------------------------
-DEF_DATA_VAR(tdv_gyro_spi_pins_clk, 2, 
-  "gyro.spi.pins.clock",
-  "Gyro SPI data clock gpio pin",
-  u32, Tdm_RW | Tdm_config);
-
-// ---------------------------------------------------------------
-DEF_DATA_VAR(tdv_gyro_spi_pins_select, 1, 
+DEF_DATA_VAR(tdv_gyro_spi_pins_select, 5, 
   "gyro.spi.pins.select",
   "Gyro SPI chip select gpio pin",
   u32, Tdm_RW | Tdm_config);
 
 // ---------------------------------------------------------------
-DEF_DATA_VAR(tdv_gyro_spi_clk_reg_hz, 1000000, 
+DEF_DATA_VAR(tdv_gyro_spi_pins_clk, 6, 
+  "gyro.spi.pins.clock",
+  "Gyro SPI data clock gpio pin",
+  u32, Tdm_RW | Tdm_config);
+
+// ---------------------------------------------------------------
+DEF_DATA_VAR(tdv_gyro_spi_pins_out, 7, 
+  "gyro.spi.pins.out",
+  "Gyro SPI data ouput gpio pin",
+  u32, Tdm_RW | Tdm_config);
+
+// ---------------------------------------------------------------
+DEF_DATA_VAR(tdv_gyro_rdy_pin, 8, 
+  "gyro.data_ready.pin",
+  "Pin where gyro will raise \"data ready\" signal",
+  u32, Tdm_RW | Tdm_config);
+
+// ---------------------------------------------------------------
+DEF_DATA_VAR(tdv_gyro_spi_clk_reg_hz, 8000000, 
   "gyro.spi.clock.registers",
   "Gyro SPI clock speed for reading/writing registers",
   u32, Tdm_RW | Tdm_config);
@@ -67,6 +69,9 @@ DEF_DATA_VAR(tdv_gyro_spi_clk_rates_hz, 20000000,
   "gyro.spi.clock.rates",
   "Gyro SPI clock speed for reading gyro rates",
   u32, Tdm_RW | Tdm_config);
+
+
+
 
 // ---------------------------------------------------------------
 DEF_DATA_VAR(tdv_gyro_cal_samples, 8000 * 2, 

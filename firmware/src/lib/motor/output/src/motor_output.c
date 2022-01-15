@@ -22,10 +22,10 @@ BEGIN_DEF_DV_ARRAY(tdv_motor_out_cmd)
 END_DEF_DV_ARRAY();
 
 BEGIN_DEF_DV_ARRAY(tdv_motor_output_pin)
-  DEF_DV_ARRAY_ITEM_NAMED(6, "motor.0.pin", "Gpio pin to use for communication", u8, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM_NAMED(7, "motor.1.pin", "Gpio pin to use for communication", u8, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM_NAMED(8, "motor.2.pin", "Gpio pin to use for communication", u8, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM_NAMED(9, "motor.3.pin", "Gpio pin to use for communication", u8, Tdm_RW | Tdm_config)
+  DEF_DV_ARRAY_ITEM_NAMED(0, "motor.0.pin", "Gpio pin to use for communication", u8, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM_NAMED(1, "motor.1.pin", "Gpio pin to use for communication", u8, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM_NAMED(2, "motor.2.pin", "Gpio pin to use for communication", u8, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM_NAMED(3, "motor.3.pin", "Gpio pin to use for communication", u8, Tdm_RW | Tdm_config)
 END_DEF_DV_ARRAY();
 
 

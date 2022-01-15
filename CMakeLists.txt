@@ -8,6 +8,8 @@ if( NOT PF_BUILD_TOOLS)
   include(firmware/pico_sdk_import.cmake)
 endif()
 
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
 
 project(pico-flight C CXX ASM)
 set(CMAKE_C_STANDARD 11)

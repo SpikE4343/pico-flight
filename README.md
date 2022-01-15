@@ -69,3 +69,5 @@ make
       - [ ] Store current settings in human readable format.
       - [ ] Keep a backup of last settings?
     
+## Pico Pinouts
+
