@@ -1,4 +1,4 @@
-19807864066825233
+19811148435784993
 01-pico-footprints
 2450FM07A0035T
 
@@ -6,6 +6,20 @@
 0
 4
 4
+01-pico-footprints
+PAD_X1_SMD_01x02
+
+
+0
+1
+1
+01-pico-footprints
+PAD_X2_SMD_01x02
+
+
+0
+2
+2
 01-pico-footprints
 PAD_X4_SMD_03x02
 
