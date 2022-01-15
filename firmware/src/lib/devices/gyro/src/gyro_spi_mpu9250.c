@@ -386,8 +386,8 @@ void gyroConfigure9250()
 // ---------------------------------------------------------------
 void gyroConfigure()
 {
-  gyroConfigure6000();
-  // gyroConfigure9250();
+  //gyroConfigure6000();
+  gyroConfigure9250();
 }
 
 // ---------------------------------------------------------------
@@ -406,9 +406,10 @@ void gyroInit()
   spi_init(s.spi, tdv_gyro_spi_clk_reg_hz.v.u32);
 
   gpio_set_function(u8v(tdv_gyro_spi_pins_in), GPIO_FUNC_SPI);
+  gpio_set_function(u8v(tdv_gyro_spi_pins_select), GPIO_FUNC_SPI);
   gpio_set_function(u8v(tdv_gyro_spi_pins_clk), GPIO_FUNC_SPI);
   gpio_set_function(u8v(tdv_gyro_spi_pins_out), GPIO_FUNC_SPI);
-  gpio_set_function(u8v(tdv_gyro_spi_pins_select), GPIO_FUNC_SPI);
+ 
 
   gyroConfigure();
   
