@@ -178,13 +178,13 @@ DEF_DATA_VAR(tdv_rc_uart_id, 1,
   u8, Tdm_RW | Tdm_config);
 
 // ---------------------------------------------------------------
-DEF_DATA_VAR(tdv_rc_uart_pins_tx, 21, 
+DEF_DATA_VAR(tdv_rc_uart_pins_tx, 20, 
   "rc.uart.pins.tx",
   "Id of gpio pin to use for transmit",
   u8, Tdm_RW | Tdm_config);
 
 // ---------------------------------------------------------------
-DEF_DATA_VAR(tdv_rc_uart_pins_rx, 20, 
+DEF_DATA_VAR(tdv_rc_uart_pins_rx, 21, 
   "rc.uart.pins.rx",
   "Id of gpio pin to use for receive",
   u8, Tdm_RW | Tdm_config);
