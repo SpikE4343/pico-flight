@@ -5,11 +5,17 @@
 #include <stdlib.h>
 
 #include "pico/stdlib.h"
-#include "pico/float.h"
+
 #include "hardware/timer.h"
 #include "hardware/gpio.h"
+
 #include "pico/multicore.h"
 // #include "web_server.h"
+
+#if PICO_ON_DEVICE
+#include "pico/float.h"
+#include "hardware/watchdog.h"
+#endif
 
 #include "filters.h"
 #include "flight_controller.h"
@@ -33,8 +39,6 @@
 #define FC_STATE_FAILSAFE 200
 #define FC_STATE_ARMED 300
 
-
-
 // ---------------------------------------------------------------
 typedef struct
 {
@@ -45,7 +49,7 @@ typedef struct
 
 static FlightControllerState_t state;
 
-bool flightUpdate(repeating_timer_t* timer);
+bool flightUpdate(repeating_timer_t *timer);
 void flightPrintTask();
 
 static repeating_timer_t timer;
@@ -64,7 +68,7 @@ void gyro_ready_callback(uint8_t gpio, uint32_t events)
 }
 
 // ---------------------------------------------------------------
-bool flightIdleTimer(repeating_timer_t* timer)
+bool flightIdleTimer(repeating_timer_t *timer)
 {
   tdv_fc_core0_counter.v.u32 += ((int32_t)(counter0 - tdv_fc_core0_counter.v.u32)) >> 1;
   tdv_fc_core1_counter.v.u32 += ((int32_t)(counter1 - tdv_fc_core1_counter.v.u32)) >> 1;
@@ -75,16 +79,16 @@ bool flightIdleTimer(repeating_timer_t* timer)
 
 // ---------------------------------------------------------------
 void flightCore0()
-{  
-    // sample counters every millisecond
-  if (!add_repeating_timer_us(-1000000.0 / 100.0, flightIdleTimer, NULL, &idle_timer))
+{
+  // sample counters every millisecond
+  if (!add_repeating_timer_ms(-1, flightIdleTimer, NULL, &idle_timer))
   {
     printf("Failed to add timer\n");
     return;
   }
 
   // negative timeout means exact delay (rather than delay between callbacks)
-  if (!add_repeating_timer_us(-1000000.0 / tdv_fc_telemetry_rate_hz.v.u32, flightUpdate, NULL, &timer))
+  if (!add_repeating_timer_ms(-1000 / tdv_fc_telemetry_rate_hz.v.u32, flightUpdate, NULL, &timer))
   {
     printf("Failed to add timer\n");
     return;
@@ -94,18 +98,32 @@ void flightCore0()
   gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
 
   bool status = false;
-  
-  // webServerInit();
 
-  while(true)
+  // if (watchdog_caused_reboot())
+  //   printf("Rebooted by Watchdog!\n");
+  
+
+  // Enable the watchdog, requiring the watchdog to be updated every 100ms or the chip will reboot
+  // second arg is pause on debug which means the watchdog will pause when stepping through code
+  // watchdog_enable(100, 1);
+
+  // webServerInit();
+  // 00        | 00        | 0    3    | FF
+  // 0000 0000 | 0000 0000 | 0000 0011 | 1111 1111
+
+  while (true)
   {
     // webServerUpdate();
-    if(++counter0 % 1000 == 0)
+    // mask off lower 10 bits
+    if (((++counter0) & 0x00000FFF) == 0)
     {
       status = !status;
       gpio_put(PICO_DEFAULT_LED_PIN, status);
+      io_rc_update();
+      flightPrintTask();
+      // watchdog_update();
     }
-  } 
+  }
 }
 
 // ---------------------------------------------------------------
@@ -125,9 +143,10 @@ void flightCore1()
 
   gyroSetUpdateCallback(flightGyroUpdateTask);
 
+  // signal main thread we are done intializing
   multicore_fifo_push_blocking(1);
 
-  while(true)
+  while (true)
   {
     ++counter1;
   }
@@ -146,7 +165,6 @@ void flightInit()
   io_rc_init();
   // osdInit();
   // camera_init();
-  
 
   state.startupMs = system_time_us();
 
@@ -196,8 +214,7 @@ float applyBetaflightRates(const int axis, float rcCommandf, const float rcComma
 // ---------------------------------------------------------------
 void flightProcessInputs()
 {
-  io_rc_update();
-
+  
   tdv_fc_inputs[0].v.f32 = tdv_rc_input[tdv_rc_mapping[0].v.u8].v.f32;
   tdv_fc_inputs[1].v.f32 = tdv_rc_input[tdv_rc_mapping[1].v.u8].v.f32;
   tdv_fc_inputs[2].v.f32 = tdv_rc_input[tdv_rc_mapping[2].v.u8].v.f32;
@@ -212,121 +229,117 @@ void flightControlUpdate()
   flightProcessInputs();
 
   uint32_t next = tdv_fc_state.v.u32;
-  bool rxloss = ((uint32_t)now - tdv_rc_last_recv_us.v.u32)/1000 >= tdv_rc_recv_timeout.v.u32;
+  bool rxloss = ((uint32_t)now - tdv_rc_last_recv_us.v.u32) / 1000 >= tdv_rc_recv_timeout.v.u32;
   tdv_rc_signal_lost.v.b8 = rxloss;
 
   bool outputEnabled = false;
   switch (tdv_fc_state.v.u32)
   {
-    // ---------------------------------------------------------------
-    case FC_STATE_BOOT:
-      next = FC_STATE_CALIBRATE;
-      break;
+  // ---------------------------------------------------------------
+  case FC_STATE_BOOT:
+    next = FC_STATE_CALIBRATE;
+    break;
 
-    // ---------------------------------------------------------------
-    case FC_STATE_CALIBRATE:
+  // ---------------------------------------------------------------
+  case FC_STATE_CALIBRATE:
+  {
+    if (tdv_gyro_state.v.u32 == GYRO_ST_READY)
+      next = FC_STATE_DISARMED;
+    else if (tdv_gyro_state.v.u32 == GYRO_ST_FAIL)
+      next = FC_STATE_CALIBRATE_FAIL;
+
+    break;
+  }
+
+  // ---------------------------------------------------------------
+  case FC_STATE_ARMED:
+
+    if (tdv_rc_failsafe.v.b8) //||
+                              // tdv_rc_signal_lost.v.b8 )//||
+                              // rxloss)
     {
-      if( tdv_gyro_state.v.u32 == GYRO_ST_READY)
-        next = FC_STATE_DISARMED;
-      else if( tdv_gyro_state.v.u32 == GYRO_ST_FAIL)
-        next = FC_STATE_CALIBRATE_FAIL;
-        
+
+      tdv_fc_armed.v.b8 = false;
+
+      next = FC_STATE_DISARMED;
       break;
     }
 
-    // ---------------------------------------------------------------
-    case FC_STATE_ARMED:
-
-      if (tdv_rc_failsafe.v.b8 )//|| 
-          //tdv_rc_signal_lost.v.b8 )//||
-          // rxloss)
-      {
-        
-        tdv_fc_armed.v.b8 = false;
-
-        next = FC_STATE_DISARMED;
-        break;
-      }
-
-      if (!tdv_fc_armed.v.b8)
-      {
-        next = FC_STATE_DISARMED;
-        break;
-      }
-
-      outputEnabled = tdv_motor_output_enabled.v.b8;
-      flightAttitudeUpdate(
-        tdv_fc_attitude_outputs, 
-        tdv_fc_inputs, 
-        tdv_fc_rates_filtered, 
-        1.0f / tdv_fc_update_rate_hz.v.u32
-        );
-     
-      break;
-
-    // ---------------------------------------------------------------
-    case FC_STATE_FAILSAFE:
-      if (!bool8v(tdv_fc_armed) 
-       && !bool8v(tdv_rc_failsafe) 
-       ) //&& !bool8v(tdv_rc_signal_lost))
-      {
-        next = FC_STATE_DISARMED;
-      }
-      break;
-
-    // ---------------------------------------------------------------
-    case FC_STATE_DISARMED:
-      tdv_fc_inputs[0].v.f32 = tdv_fc_attitude_outputs[0].v.f32 = 0.0f;
-      tdv_fc_inputs[1].v.f32 = tdv_fc_attitude_outputs[1].v.f32 = 0.0f;
-      tdv_fc_inputs[2].v.f32 = tdv_fc_attitude_outputs[2].v.f32 = 0.0f;
-      tdv_fc_inputs[3].v.f32 = tdv_fc_attitude_outputs[3].v.f32 = 0.0f;
-
-      tdv_fc_pidf_v_pitch[0].v.f32 = 0.0f;
-      tdv_fc_pidf_v_pitch[1].v.f32 = 0.0f;
-      tdv_fc_pidf_v_pitch[2].v.f32 = 0.0f;
-      tdv_fc_pidf_v_pitch[3].v.f32 = 0.0f;
-
-      tdv_fc_pidf_v_roll[0].v.f32 = 0.0f;
-      tdv_fc_pidf_v_roll[1].v.f32 = 0.0f;
-      tdv_fc_pidf_v_roll[2].v.f32 = 0.0f;
-      tdv_fc_pidf_v_roll[3].v.f32 = 0.0f;
-
-      tdv_fc_pidf_v_yaw[0].v.f32 = 0.0f;
-      tdv_fc_pidf_v_yaw[1].v.f32 = 0.0f;
-      tdv_fc_pidf_v_yaw[2].v.f32 = 0.0f;
-      tdv_fc_pidf_v_yaw[3].v.f32 = 0.0f;
-
-      for (int m = 0; m < tdv_motor_count.v.u8; ++m)
-        tdv_motor_output[m].v.f32 = 0;
-
-      if  (bool8v(tdv_fc_armed) 
-       && !bool8v(tdv_rc_failsafe) 
-      //  && !bool8v(tdv_rc_signal_lost)
-      )//  && !rxloss)
-      {
-        next = FC_STATE_ARMED;
-        break;
-      }
-      break;
-
-    // ---------------------------------------------------------------
-    default:
+    if (!tdv_fc_armed.v.b8)
     {
-      if (now < (state.startupMs + (uint64_t)tdv_motor_startup_delay_ms.v.u32))
-      {
-        //++state.controlUpdates;
-      }
-      else if (now < (state.startupMs + tdv_motor_startup_delay_ms.v.u32 * 2))
-      {
-        for (int m = 0; m < tdv_motor_count.v.u8; ++m)
-          tdv_motor_output[m].v.f32 = 0;
-      }
-      else
-      {
-        next = FC_STATE_DISARMED;
-      }
+      next = FC_STATE_DISARMED;
+      break;
+    }
+
+    outputEnabled = tdv_motor_output_enabled.v.b8;
+    flightAttitudeUpdate(
+        tdv_fc_attitude_outputs,
+        tdv_fc_inputs,
+        tdv_fc_rates_filtered,
+        1.0f / tdv_fc_update_rate_hz.v.u32);
+
+    break;
+
+  // ---------------------------------------------------------------
+  case FC_STATE_FAILSAFE:
+    if (!bool8v(tdv_fc_armed) && !bool8v(tdv_rc_failsafe)) //&& !bool8v(tdv_rc_signal_lost))
+    {
+      next = FC_STATE_DISARMED;
     }
     break;
+
+  // ---------------------------------------------------------------
+  case FC_STATE_DISARMED:
+    tdv_fc_inputs[0].v.f32 = tdv_fc_attitude_outputs[0].v.f32 = 0.0f;
+    tdv_fc_inputs[1].v.f32 = tdv_fc_attitude_outputs[1].v.f32 = 0.0f;
+    tdv_fc_inputs[2].v.f32 = tdv_fc_attitude_outputs[2].v.f32 = 0.0f;
+    tdv_fc_inputs[3].v.f32 = tdv_fc_attitude_outputs[3].v.f32 = 0.0f;
+
+    tdv_fc_pidf_v_pitch[0].v.f32 = 0.0f;
+    tdv_fc_pidf_v_pitch[1].v.f32 = 0.0f;
+    tdv_fc_pidf_v_pitch[2].v.f32 = 0.0f;
+    tdv_fc_pidf_v_pitch[3].v.f32 = 0.0f;
+
+    tdv_fc_pidf_v_roll[0].v.f32 = 0.0f;
+    tdv_fc_pidf_v_roll[1].v.f32 = 0.0f;
+    tdv_fc_pidf_v_roll[2].v.f32 = 0.0f;
+    tdv_fc_pidf_v_roll[3].v.f32 = 0.0f;
+
+    tdv_fc_pidf_v_yaw[0].v.f32 = 0.0f;
+    tdv_fc_pidf_v_yaw[1].v.f32 = 0.0f;
+    tdv_fc_pidf_v_yaw[2].v.f32 = 0.0f;
+    tdv_fc_pidf_v_yaw[3].v.f32 = 0.0f;
+
+    for (int m = 0; m < tdv_motor_count.v.u8; ++m)
+      tdv_motor_output[m].v.f32 = 0;
+
+    if (bool8v(tdv_fc_armed) && !bool8v(tdv_rc_failsafe)
+        //  && !bool8v(tdv_rc_signal_lost)
+        ) //  && !rxloss)
+    {
+      next = FC_STATE_ARMED;
+      break;
+    }
+    break;
+
+  // ---------------------------------------------------------------
+  default:
+  {
+    if (now < (state.startupMs + (uint64_t)tdv_motor_startup_delay_ms.v.u32))
+    {
+      //++state.controlUpdates;
+    }
+    else if (now < (state.startupMs + tdv_motor_startup_delay_ms.v.u32 * 2))
+    {
+      for (int m = 0; m < tdv_motor_count.v.u8; ++m)
+        tdv_motor_output[m].v.f32 = 0;
+    }
+    else
+    {
+      next = FC_STATE_DISARMED;
+    }
+  }
+  break;
   }
 
   if (next != tdv_fc_state.v.u32)
@@ -341,18 +354,18 @@ void flightControlUpdate()
   ++tdv_fc_control_updates.v.u32;
 }
 
-#define GYRO_SCALE (1000.0f / (float)(65535.0f/2.0f))
+#define GYRO_SCALE (1000.0f / (float)(65535.0f / 2.0f))
 
 // ---------------------------------------------------------------
 void flightGyroUpdateTask()
 {
   uint32_t t = timer_hw->timelr;
-  GyroState_t* gyro = gyroState();
+  GyroState_t *gyro = gyroState();
 
   tdv_fc_rates_raw[0].v.f32 = ((float)gyro->raw_rates.axis[0]) / 32.8f / 1000.0f; //* GYRO_SCALE;
   tdv_fc_rates_raw[1].v.f32 = ((float)gyro->raw_rates.axis[1]) / 32.8f / 1000.0f; //* GYRO_SCALE;
   tdv_fc_rates_raw[2].v.f32 = ((float)gyro->raw_rates.axis[2]) / 32.8f / 1000.0f; //* GYRO_SCALE;
-  
+
   // TODO: explore using hardware interp in blend mode as a low pass filter
 
   tdv_fc_rates_filtered[0].v.f32 = lowPassFilter(tdv_fc_rates_filtered[0].v.f32, tdv_fc_rates_raw[0].v.f32, state.lpfAlpha);
@@ -361,23 +374,22 @@ void flightGyroUpdateTask()
 
   ++tdv_fc_gyro_updates.v.u32;
 
-  if(tdv_fc_gyro_updates.v.u32 % state.gyroTicksPerControl == 0 )
+  if (tdv_fc_gyro_updates.v.u32 % state.gyroTicksPerControl == 0)
   {
     flightControlUpdate();
   }
 
   int32_t dt = timer_hw->timelr - t;
   tdv_fc_gyro_update_us.v.u32 += ((int32_t)(dt - tdv_fc_gyro_update_us.v.u32)) >> 1;
-  //return true;
+  // return true;
 }
 
 // ---------------------------------------------------------------
-bool flightUpdate(repeating_timer_t* timer)
+bool flightUpdate(repeating_timer_t *timer)
 {
   flightPrintTask();
   return true;
 }
-
 
 static int x = 0;
 static int y = 0;
@@ -388,6 +400,9 @@ double temp = 0.0f;
 // ---------------------------------------------------------------
 void flightPrintTask()
 {
+  if(telemetry_sending())
+    return;
+
   uint64_t time = system_time_us();
 
   // telemetry_sample_array(tdv_fc_rates_raw, 3);
@@ -395,7 +410,7 @@ void flightPrintTask()
   telemetry_sample_var_array(tdv_motor_output, tdv_motor_count.v.u32);
   telemetry_sample_var_array(tdv_motor_out_cmd, tdv_motor_count.v.u32);
 
-  //telemetry_sample_var_array(tdv_motor_output, tdv_motor_count.v.u8);
+  // telemetry_sample_var_array(tdv_motor_output, tdv_motor_count.v.u8);
 
   telemetry_sample_var(&tdv_fc_armed);
   // telemetry_sample_var(&tdv_fc_gyro_updates);
@@ -431,7 +446,7 @@ void flightPrintTask()
 
   // telemetry_sample_var(&tdv_rc_uart_rx_bytes);
   // telemetry_sample_var(&tdv_rc_uart_tx_bytes);
-  
+
   // sprintf(buffer, "% u    ", tdv_fc_core0_counter.v.u32);
   // osdDrawString(10, 90, buffer);
 
@@ -441,26 +456,23 @@ void flightPrintTask()
   tdv_rc_uart_rx_bytes.v.u32 = 0;
   tdv_rc_uart_tx_bytes.v.u32 = 0;
 
-  
   telemetry_send(state.startupMs, time);
   telemetry_update();
 
-  //osdDraw( 40 + (x++ * 8) % 100, (x / 100)+25,1);
-  // osdDraw( (x) % 515, 11, (x % 4) > 0);
-  // ++x;
+  // osdDraw( 40 + (x++ * 8) % 100, (x / 100)+25,1);
+  //  osdDraw( (x) % 515, 11, (x % 4) > 0);
+  //  ++x;
 
   // //printf("buffer=%s\n",buffer);
   // temp = tdv_fc_gyro_roll.value.f32;
   // sprintf(buffer, "%f    ",temp);
   // osdDrawString(10, 80, buffer);
 
- 
-
   // sprintf(buffer, "%f    ", tdv_fc_gyro_yaw.value.f32);
   // osdDrawString(10, 100, buffer);
-  
-  //osdDrawString2(40 + (x += 16) % 200, ((x / 200)*16)%200 +25, buffer);
-  
+
+  // osdDrawString2(40 + (x += 16) % 200, ((x / 200)*16)%200 +25, buffer);
+
   state.lpfAlpha = lpfAlpha(
       tdv_gyro_filter_hz.v.u32,
       tdv_gyro_sample_rate_hz.v.u32);

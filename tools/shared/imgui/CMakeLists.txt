@@ -1,7 +1,7 @@
 add_library(tools-shared-imgui INTERFACE)
 
 find_package(SDL2 REQUIRED)
-include_directories(${SDL2_INCLUDE_DIRS})
+include_directories(${SDL2_INCLUDE_DIR})
 
 find_package(OpenGL REQUIRED)
 
@@ -11,7 +11,7 @@ find_package(OpenGL REQUIRED)
 set(IMGUI_DIR ${CMAKE_CURRENT_LIST_DIR}/../../external/imgui)
 set(IMPLOT_DIR ${CMAKE_CURRENT_LIST_DIR}/../../external/implot)
 
-message("SDL2_INCLUDE_DIRS = '${SDL2_INCLUDE_DIRS}'")
+message("SDL2_INCLUDE_DIR = '${SDL2_INCLUDE_DIR}'")
 
 target_sources(tools-shared-imgui INTERFACE
   ${IMGUI_DIR}/imgui.cpp 
@@ -32,7 +32,7 @@ target_sources(tools-shared-imgui INTERFACE
 )
 
 target_include_directories(tools-shared-imgui INTERFACE 
-  ${SDL2_INCLUDE_DIRS}
+  ${SDL2_INCLUDE_DIR}
   ${CMAKE_CURRENT_LIST_DIR}/src  
   ${IMGUI_DIR}/
   ${IMGUI_DIR}/backends
@@ -40,7 +40,7 @@ target_include_directories(tools-shared-imgui INTERFACE
   )
     
 target_link_libraries(tools-shared-imgui INTERFACE
-  ${SDL2_LIBRARIES}
+  ${SDL2_LIBRARY}
   OpenGL::GL 
   ${CMAKE_DL_LIBS}
   # core-system

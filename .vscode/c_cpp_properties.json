@@ -4,7 +4,10 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/../../pico-sdk/**"
+                "${workspaceFolder}/../../pico-sdk/**",
+                "/home/john/code/pico/pico-sdk/**",
+                "/home/john/code/pico/pico-sdk/src/common/pico_stdlib/include",
+                "/home/john/code/pico/pico-sdk/src/rp2_common/pico_stdio_uart/include"
             ],
             "defines": [],
             "compilerPath": "/usr/local/bin/clang",

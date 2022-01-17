@@ -6,7 +6,10 @@
 
 #include "pico/stdlib.h"
 #include "hardware/uart.h"
+
+#if PICO_ON_DEVICE
 #include "hardware/structs/uart.h"
+#endif
 #include "io_rc.h"
 #include "data_vars.h"
 
@@ -112,12 +115,12 @@ void io_rc_init()
   // assert(actual == BAUD_RATE);
 
   // Set UART flow control CTS/RTS, we don't want these, so turn them off
-  uart_set_hw_flow(s.uart, false, false);
+  // uart_set_hw_flow(s.uart, false, false);
 
   // Set our data format
-  uart_set_format(s.uart, DATA_BITS, STOP_BITS, PARITY);
+  // uart_set_format(s.uart, DATA_BITS, STOP_BITS, PARITY);
 
-  uart_set_fifo_enabled(s.uart, true);
+  // uart_set_fifo_enabled(s.uart, true);
 
   // int UART_IRQ = !s.uart ? UART0_IRQ : UART1_IRQ;
 
@@ -125,7 +128,7 @@ void io_rc_init()
   // irq_set_exclusive_handler(UART_IRQ, on_uart_rx);
   // irq_set_enabled(UART_IRQ, true);
 
-  uart_set_irq_enables(s.uart, false, false);
+  //uart_set_irq_enables(s.uart, false, false);
 
 
 
@@ -190,7 +193,7 @@ DEF_DATA_VAR(tdv_rc_uart_pins_rx, 21,
   u8, Tdm_RW | Tdm_config);
 
 // ---------------------------------------------------------------
-DEF_DATA_VAR(tdv_rc_uart_baud, 115200,
+DEF_DATA_VAR(tdv_rc_uart_baud, 400000,
   "rc.uart.baud",
   "Baud rate to use for rc communication",
   u32, Tdm_RW | Tdm_config);

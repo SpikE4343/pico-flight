@@ -64,6 +64,7 @@ static void dma_init(uint8_t* packets)
       false);
 
   //dma_channel_set_irq0_enabled(s.dmaId, true);
+  // s.sendCallback = 0;
 }
 
 static void dma_send(uint32_t sendLength, uint8_t* packets, int packetCount)
@@ -78,8 +79,8 @@ static void dma_send(uint32_t sendLength, uint8_t* packets, int packetCount)
 
 void telemetry_native_init(telemetry_native_send_callback_t sendCB)
 {
-  s.sendCallback = sendCB;
   dma_init(NULL);
+  s.sendCallback = sendCB;
 }
 
 

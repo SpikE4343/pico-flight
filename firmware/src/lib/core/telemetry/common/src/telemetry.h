@@ -16,6 +16,7 @@ typedef struct {
 void telemetry_init();
 void telemetry_update();
 
+bool telemetry_sending();
 void telemetry_send(uint64_t start, uint64_t now);
 void telemetry_recv(uint8_t byte);
 

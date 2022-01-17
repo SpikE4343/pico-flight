@@ -67,7 +67,7 @@ void telemetry_native_recv(int max)
 
 static char port[64];
 static int port_len;
-static int baud = 115200;
+static int baud = 400000;
 static bool serialIsFile = false;
 static bool serialLogToFile = false;
 

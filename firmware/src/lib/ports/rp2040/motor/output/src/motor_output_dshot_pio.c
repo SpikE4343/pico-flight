@@ -34,7 +34,7 @@ uint8_t dshotPacketBitPlanes[DSHOT_PACKET_SIZE_BITS];
 void dshot_update_bitplanes(uint8_t *bitPlane, DshotPacket_t *packets)
 {
   int bitCount = DSHOT_PACKET_SIZE_BITS;
-  memset(bitPlane, 0, MAX_MOTORS*DSHOT_PACKET_SIZE_BITS);
+  memset(bitPlane, 0, DSHOT_PACKET_SIZE_BITS);
 
   // for each packet
   for (int p = 0; p < MAX_MOTORS; ++p)

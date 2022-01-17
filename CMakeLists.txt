@@ -5,7 +5,7 @@ set(PF_BUILD_TOOLS OFF CACHE BOOL "Build tools instead of firmware")
 
 if( NOT PF_BUILD_TOOLS)
   # Pull in PICO SDK (must be before project)
-  include(firmware/pico_sdk_import.cmake)
+  include(${PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 endif()
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")

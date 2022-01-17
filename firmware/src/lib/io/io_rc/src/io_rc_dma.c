@@ -7,9 +7,14 @@
 
 #include "pico/stdlib.h"
 #include "hardware/uart.h"
-#include "hardware/structs/uart.h"
+
 #include "hardware/dma.h"
 #include "hardware/irq.h"
+
+#if PICO_ON_DEVICE
+#include "hardware/structs/uart.h"
+#endif
+
 
 #include "math_util.h"
 #include "io_rc.h"
@@ -25,10 +30,10 @@ static int dmaMask=0;
 // ---------------------------------------------------------------
 void __time_critical_func(dma_complete_handler)() 
 {
-  if (!(dma_hw->ints1 & dmaMask))
+  if (!(dma_hw->ints0 & dmaMask))
     return;
 
-  dma_hw->ints1 = dmaMask;
+  dma_hw->ints0 = dmaMask;
 
   int8_t* write = io_rc_rx_buffer_bytes_written(READ_BYTES);
 
@@ -45,8 +50,8 @@ void io_rc_rx_dma_init(uint8_t uart)
   
   // had to set to a lower priority than another shared handler
   // if both are highest priority it will cause a crash.
-  irq_add_shared_handler(
-      DMA_IRQ_0, dma_complete_handler, PICO_DEFAULT_IRQ_PRIORITY);
+  // irq_add_shared_handler(
+  //     DMA_IRQ_0, dma_complete_handler, PICO_DEFAULT_IRQ_PRIORITY);
 
   dma_channel_config c = dma_channel_get_default_config(dmaId);
   channel_config_set_dreq(&c,  uart ? DREQ_UART1_RX : DREQ_UART0_RX);
@@ -66,10 +71,13 @@ void io_rc_rx_dma_init(uint8_t uart)
       READ_BYTES,
       false);
   
+  irq_set_exclusive_handler(DMA_IRQ_0, dma_complete_handler);
   dma_channel_set_irq0_enabled(dmaId, true);
+  irq_set_enabled(DMA_IRQ_0, true);
   
 
-  dma_start_channel_mask(dmaMask);
+  dma_channel_hw_addr(dmaId)->al1_write_addr = (uintptr_t)write;
+  dma_channel_hw_addr(dmaId)->al1_transfer_count_trig = READ_BYTES;
 
   assert(dma_channel_is_busy(dmaId));
 }

@@ -22,6 +22,7 @@ target_link_libraries(flight INTERFACE
     io_rc
     gyro
     rp2040_osd
+    hardware_watchdog
     # web_server
     # camera
     )

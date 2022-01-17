@@ -42,6 +42,8 @@
         "interface/picoprobe.cfg",
         "target/rp2040.cfg"
       ],
+      "showDevDebugOutput": false,
+      // "serverArgs": ["-d"],
       "svdFile": "/home/john/code/pico/pico-sdk/src/rp2040/hardware_regs/rp2040.svd",
       "runToMain": true,
       // Work around for stopping at main on restart

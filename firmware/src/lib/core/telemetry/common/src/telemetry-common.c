@@ -587,6 +587,12 @@ void __time_critical_func(telemetry_update)()
 }
 
 // ---------------------------------------------------------------
+bool __time_critical_func(telemetry_sending)()
+{
+  return telemetry_native_sending();
+}
+
+// ---------------------------------------------------------------
 void __time_critical_func(telemetry_send)(uint64_t start, uint64_t now)
 {
   if(telemetry_native_sending())
@@ -823,6 +829,10 @@ void telemetry_recv(uint8_t byte)
         recv_state = RECV_RESET;
         break;
       }
+    }
+    else
+    {
+      printf("%c",byte);
     }
     break;
 
