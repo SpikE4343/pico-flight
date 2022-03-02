@@ -3,7 +3,6 @@
 
 #include "telemetry_data.h"
 
-
 typedef void (*telemetry_desc_callback_t)(TDataVarDesc_t* desc);
 
 typedef struct {
@@ -31,7 +30,9 @@ void telemetry_sample_var_at(TDataVar_t* dataVar, float now);
 
 void telemetry_sample_var_array(TDataVar_t* dataVar, int count);
 
-bool telemetry_write_all_to_file(const char* filename, uint32_t modsFilter);
+#include <stdio.h>
+
+bool telemetry_write_all_to_file(FILE*file, uint32_t modsFilter);
 
 float telemetry_var_get_float(TDataVar_t*v);
 

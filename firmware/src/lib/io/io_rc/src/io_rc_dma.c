@@ -24,7 +24,7 @@
 static int dmaId=0;
 static int dmaMask=0;
 
-#define READ_BYTES 4
+#define READ_BYTES 1
 
 
 // ---------------------------------------------------------------
@@ -57,9 +57,9 @@ void io_rc_rx_dma_init(uint8_t uart)
   channel_config_set_dreq(&c,  uart ? DREQ_UART1_RX : DREQ_UART0_RX);
   // channel_config_set_irq_quiet(&c, false);
   channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
-  channel_config_set_write_increment(&c, true);
+  // channel_config_set_write_increment(&c, true);
   channel_config_set_read_increment(&c, false);
-  channel_config_set_ring(&c, true, 8);
+  // channel_config_set_ring(&c, true, 8);
   
   int8_t* write = io_rc_rx_buffer_bytes_written(0);
 

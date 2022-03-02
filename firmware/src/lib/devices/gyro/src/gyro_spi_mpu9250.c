@@ -14,6 +14,8 @@
 #include "data_vars.h"
 
 
+static gyro_update_complete_callback_t callbackBackup;
+
 typedef spi_inst_t *spi_t;
 
 // ---------------------------------------------------------------
@@ -27,9 +29,7 @@ typedef struct
 typedef struct
 {
   spi_t spi;
-  GyroState_t gyro;
-  uint8_t gyroBuffer[7];
-  uint8_t gyroBufferRx[7];
+  
   GyroDma_t dma_tx;
   GyroDma_t dma_rx;
 
@@ -38,7 +38,11 @@ typedef struct
 
   gyro_update_complete_callback_t completeCallback;
 
-  Vector3i32_t rates;  
+  Vector3i32_t rates;
+
+  GyroState_t gyro;
+  uint8_t gyroBuffer[7];
+  uint8_t gyroBufferRx[7];  
 
 } GyroLocalState_t;
 static GyroLocalState_t s;
@@ -85,6 +89,7 @@ static void __time_critical_func(dma_complete_handler)()
   //printf("raw: ");print_vector3i16(&s.gyro.raw_rates);printf("\n");
   // cs_select(1);
 
+  ++s.completeCount;
   // if(s.completeCount++ % 1000 == 0)
   //   printf("g:dma:c\n");
 
@@ -99,12 +104,24 @@ static void __time_critical_func(gyro_data_ready_handler)(uint gpio, uint32_t ev
   
   gpio_acknowledge_irq(gpio, events);
   
+  ++s.startCount;
   // if(s.startCount++ % 1000 == 0)
   //   printf("g:r, %u - %u\n", s.startCount, s.completeCount);
   //   return;
 
   //dma_start_channel_mask(s.dma_tx.mask | s.dma_rx.mask);
 
+  if(dma_channel_is_busy(s.dma_tx.id))
+  {
+    // printf("gyro tx dma %u busy after data ready irq!\n", s.dma_tx.id);
+    return;
+  }
+
+  if(dma_channel_is_busy(s.dma_rx.id))
+  {
+    // printf("gyro rx dma %u busy after data ready irq!\n", s.dma_rx.id);
+    return;
+  }
   
 
   // cs_select(0);
@@ -177,7 +194,7 @@ static void dma_init()
 
   
   
-  printf("gyro: dma irg handler config 2\n");
+  printf("gyro: dma irq1 rx: %u\n", s.dma_rx.id);
   dma_channel_set_irq1_enabled(s.dma_rx.id, true);
 
   printf("gyro: dma irg handler config 3\n");
@@ -299,8 +316,12 @@ void gyroUpdateState()
       s.gyro.raw_rates.pitch -= (int32_t)s.gyro.cal.zeroValue.pitch;
       s.gyro.raw_rates.yaw -= (int32_t)s.gyro.cal.zeroValue.yaw;
     
-      if(s.completeCallback)
+      if(s.completeCallback && callbackBackup && s.completeCallback == callbackBackup)
         s.completeCallback();
+      else
+      {
+        assert(false);
+      }
     }
     break;
 
@@ -321,6 +342,7 @@ void gyroUpdate()
 // ---------------------------------------------------------------
 void gyroSetUpdateCallback(gyro_update_complete_callback_t cb)
 {
+  callbackBackup = cb;
   s.completeCallback = cb;
 }
 

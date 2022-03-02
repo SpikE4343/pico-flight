@@ -13,7 +13,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 project(pico-flight C CXX ASM)
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 enable_testing()
 #set(PICO_EXAMPLES_PATH ${PROJECT_SOURCE_DIR})

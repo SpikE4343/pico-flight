@@ -4,6 +4,7 @@
  
 ### Overview
  * Connects via the serial port to pico-flight device and receives telemetry data
+ * Transmits changes to Write enabled values
 
 
 ### TODO:

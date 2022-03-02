@@ -39,7 +39,7 @@ DEF_DATA_VAR(tdv_motor_output_idle, 0.05f,
              "Motor idle scalar of total motor range",
              f32, Tdm_RW | Tdm_config);
 
-DEF_DATA_VAR(tdv_motor_output_max, 0.1f,
+DEF_DATA_VAR(tdv_motor_output_max, 0.5f,
              "motor.output.max",
              "Maximum motor output value scalar",
              f32, Tdm_RW | Tdm_config);

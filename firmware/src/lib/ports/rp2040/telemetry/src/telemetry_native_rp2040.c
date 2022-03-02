@@ -69,7 +69,8 @@ static void dma_init(uint8_t* packets)
 
 static void dma_send(uint32_t sendLength, uint8_t* packets, int packetCount)
 {
-  assert(!dma_channel_is_busy(s.dmaId));
+  if(dma_channel_is_busy(s.dmaId))
+    return;
 
   s.sendingCount = packetCount;
 

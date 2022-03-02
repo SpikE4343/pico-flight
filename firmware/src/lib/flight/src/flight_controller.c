@@ -88,7 +88,7 @@ void flightCore0()
   }
 
   // negative timeout means exact delay (rather than delay between callbacks)
-  if (!add_repeating_timer_ms(-1000 / tdv_fc_telemetry_rate_hz.v.u32, flightUpdate, NULL, &timer))
+  if (!add_repeating_timer_ms(-1000 / tdv_fc_telemetry_rate_hz.v.i32, flightUpdate, NULL, &timer))
   {
     printf("Failed to add timer\n");
     return;
@@ -215,10 +215,29 @@ float applyBetaflightRates(const int axis, float rcCommandf, const float rcComma
 void flightProcessInputs()
 {
   
-  tdv_fc_inputs[0].v.f32 = tdv_rc_input[tdv_rc_mapping[0].v.u8].v.f32;
+  tdv_fc_inputs[0].v.f32 = -tdv_rc_input[tdv_rc_mapping[0].v.u8].v.f32;
   tdv_fc_inputs[1].v.f32 = tdv_rc_input[tdv_rc_mapping[1].v.u8].v.f32;
   tdv_fc_inputs[2].v.f32 = tdv_rc_input[tdv_rc_mapping[2].v.u8].v.f32;
   tdv_fc_inputs[3].v.f32 = tdv_rc_input[tdv_rc_mapping[3].v.u8].v.f32;
+
+  // Arm
+  tdv_fc_armed.v.b8 = tdv_rc_input[tdv_rc_mapping[4].v.u8].v.f32 > 1800.0f/2000.0f;
+  tdv_motor_output_enabled.v.b8 = tdv_rc_input[tdv_rc_mapping[5].v.u8].v.f32 > 1800.0f/2000.0f;
+
+  
+  
+  float kv = ((tdv_rc_input[tdv_rc_mapping[7].v.u8].v.f32+1.0f)/2.0f) + 0.01f ;
+  
+  float pmax = 0.10f;
+  tdv_fc_pidf_k_pitch[PID_P].v.f32 =  kv * pmax;
+  tdv_fc_pidf_k_roll[PID_P].v.f32 = kv * pmax;
+  tdv_fc_pidf_k_yaw[PID_P].v.f32 =  kv * pmax;
+
+  float imax = 0.25f;
+  tdv_fc_pidf_k_pitch[PID_I].v.f32 =  kv * imax;
+  tdv_fc_pidf_k_roll[PID_I].v.f32 = kv * imax;
+  tdv_fc_pidf_k_yaw[PID_I].v.f32 =  kv * imax;
+
 }
 
 // ---------------------------------------------------------------
@@ -254,9 +273,7 @@ void flightControlUpdate()
   // ---------------------------------------------------------------
   case FC_STATE_ARMED:
 
-    if (tdv_rc_failsafe.v.b8) //||
-                              // tdv_rc_signal_lost.v.b8 )//||
-                              // rxloss)
+    if (tdv_rc_failsafe.v.b8)
     {
 
       tdv_fc_armed.v.b8 = false;
@@ -313,6 +330,8 @@ void flightControlUpdate()
     for (int m = 0; m < tdv_motor_count.v.u8; ++m)
       tdv_motor_output[m].v.f32 = 0;
 
+    outputEnabled = false;
+
     if (bool8v(tdv_fc_armed) && !bool8v(tdv_rc_failsafe)
         //  && !bool8v(tdv_rc_signal_lost)
         ) //  && !rxloss)
@@ -348,7 +367,9 @@ void flightControlUpdate()
     telemetry_sample_var(&tdv_fc_state);
   }
 
-  motorMixerCalculateOutputs(tdv_fc_attitude_outputs, tdv_motor_output, tdv_motor_count.v.u8);
+  bool enablePID = tdv_rc_input[tdv_rc_mapping[6].v.u8].v.f32 > 1800.0f/2000.0f;
+
+  motorMixerCalculateOutputs(!enablePID ? tdv_fc_inputs : tdv_fc_attitude_outputs, tdv_motor_output, tdv_motor_count.v.u8);
   motorOutputSet(outputEnabled, tdv_motor_output);
 
   ++tdv_fc_control_updates.v.u32;
@@ -437,7 +458,7 @@ void flightPrintTask()
   // telemetry_sample_var_array(&tdv_fc_pidf_v_pitch, 4);
   // telemetry_sample_var_array(&tdv_fc_pidf_v_yaw, 4);
 
-  telemetry_sample_var_array(tdv_fc_pid_sum, 3);
+  //telemetry_sample_var_array(tdv_fc_pid_sum, 3);
   // telemetry_sample_var_array(&tdv_fc_pid_sp, 3);
   // telemetry_sample_var_array(&tdv_fc_pid_sp_error, 3);
   // telemetry_sample_var_array(&tdv_fc_pid_sp_delta, 3);

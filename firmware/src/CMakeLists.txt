@@ -22,6 +22,7 @@ if(NOT PF_BUILD_TOOLS)
     pico_enable_stdio_uart(pico-flight 0)
     pico_enable_stdio_semihosting(pico-flight 1)
   else()
+  
     target_link_libraries( pico-flight 
       pico_stdlib
       pico_stdio_uart
@@ -30,6 +31,7 @@ if(NOT PF_BUILD_TOOLS)
   # create map/bin/hex/uf2 file etc.
   pico_add_extra_outputs(pico-flight)
 
+  pico_enable_stdio_usb(pico-flight 1)
   # add url via pico_set_program_url
   #example_auto_set_url(pico-flight)
 

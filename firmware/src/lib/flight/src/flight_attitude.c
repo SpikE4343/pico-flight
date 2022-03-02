@@ -42,7 +42,7 @@ void flightAttitudePID(TDataVar_t* outputs, TDataVar_t* inputs, TDataVar_t* gyro
     PIDF_Values[a][PID_P].v.f32 = PIDF_Gains[a][PID_P].v.f32 * sp_error;
 
     // I-Term
-    PIDF_Values[a][PID_I].v.f32 += PIDF_Gains[a][PID_I].v.f32 * sp_error;
+    PIDF_Values[a][PID_I].v.f32 =  (PIDF_Values[a][PID_I].v.f32 * 0.8f * dT) + PIDF_Gains[a][PID_I].v.f32 * sp_error;
 
     // D-Term
     PIDF_Values[a][PID_D].v.f32 = PIDF_Gains[a][PID_D].v.f32 * tdv_fc_pid_pv_error[a].v.f32 * dT;
@@ -80,26 +80,26 @@ void flightAttitudeUpdate(TDataVar_t* outputs, TDataVar_t* inputs, TDataVar_t* g
 
 // ---------------------------------------------------------------
 BEGIN_DEF_DV_ARRAY( tdv_fc_pidf_k_roll )
-  DEF_DV_ARRAY_ITEM_NAMED(1.0f, "fc.at.roll.P.g", "Roll Proportional response gain", f32, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "fc.at.roll.P.g", "Roll Proportional response gain", f32, Tdm_RW | Tdm_config),
   DEF_DV_ARRAY_ITEM_NAMED(0.0f, "fc.at.roll.I.g", "Roll Integral response gain", f32, Tdm_RW | Tdm_config),
   DEF_DV_ARRAY_ITEM_NAMED(0.0f, "fc.at.roll.D.g", "Roll Derivative response gain", f32, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM_NAMED(1.0f, "fc.at.roll.F.g", "Roll Feed-Forward gain", f32, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "fc.at.roll.F.g", "Roll Feed-Forward gain", f32, Tdm_RW | Tdm_config),
 END_DEF_DV_ARRAY();
 
 // ---------------------------------------------------------------
 BEGIN_DEF_DV_ARRAY( tdv_fc_pidf_k_pitch )
-  DEF_DV_ARRAY_ITEM_NAMED(1.0f, "fc.at.pitch.P.g", "Pitch Proportional response gain", f32, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM_NAMED(0.5f, "fc.at.pitch.P.g", "Pitch Proportional response gain", f32, Tdm_RW | Tdm_config),
   DEF_DV_ARRAY_ITEM_NAMED(0.0f, "fc.at.pitch.I.g", "Pitch Integral response gain", f32, Tdm_RW | Tdm_config),
   DEF_DV_ARRAY_ITEM_NAMED(0.0f, "fc.at.pitch.D.g", "Pitch Derivative response gain", f32, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM_NAMED(1.0f, "fc.at.pitch.F.g", "Pitch Feed-Forward gain", f32, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "fc.at.pitch.F.g", "Pitch Feed-Forward gain", f32, Tdm_RW | Tdm_config),
 END_DEF_DV_ARRAY();
 
 // ---------------------------------------------------------------
 BEGIN_DEF_DV_ARRAY( tdv_fc_pidf_k_yaw )
-  DEF_DV_ARRAY_ITEM_NAMED(1.0f, "fc.at.yaw.P.g", "Yaw Proportional response gain", f32, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "fc.at.yaw.P.g", "Yaw Proportional response gain", f32, Tdm_RW | Tdm_config),
   DEF_DV_ARRAY_ITEM_NAMED(0.0f, "fc.at.yaw.I.g", "Yaw Integral response gain", f32, Tdm_RW | Tdm_config),
   DEF_DV_ARRAY_ITEM_NAMED(0.0f, "fc.at.yaw.D.g", "Yaw Derivative response gain", f32, Tdm_RW | Tdm_config),
-  DEF_DV_ARRAY_ITEM_NAMED(1.0f, "fc.at.yaw.F.g", "Yaw Feed-Forward gain", f32, Tdm_RW | Tdm_config),
+  DEF_DV_ARRAY_ITEM_NAMED(0.0f, "fc.at.yaw.F.g", "Yaw Feed-Forward gain", f32, Tdm_RW | Tdm_config),
 END_DEF_DV_ARRAY();
 
 

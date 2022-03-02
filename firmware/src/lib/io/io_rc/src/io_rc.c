@@ -26,13 +26,13 @@ typedef struct
 
   struct
   {
-    uint8_t packetLen;
-
     uint8_t buffer[BUFFER_SIZE];
+
+    uint8_t packetLen;
     volatile uint16_t read;
     volatile uint16_t write;
-    volatile uint16_t length;
-  } rx;
+    volatile uint8_t length;
+  }  __aligned(256) rx;
 } io_rc_state_t;
 
 static io_rc_state_t s;
@@ -46,13 +46,13 @@ static io_rc_state_t s;
 // ---------------------------------------------------------------
 inline bool io_rc_rx_buffer_empty()
 {
-  return s.rx.length == 0;
+  return s.rx.length <= 0;
 }
 
 // ---------------------------------------------------------------
 inline bool io_rc_rx_buffer_full()
 {
-  return s.rx.read == s.rx.write && s.rx.length > 0;
+  return (s.rx.read == s.rx.write || s.rx.read == ((s.rx.write + 1) & BUFFER_WRAP_MASK) ) && s.rx.length > 0;
 }
 
 // ---------------------------------------------------------------
@@ -63,7 +63,9 @@ uint8_t io_rc_rx_buffer_read()
 
   uint8_t data = s.rx.buffer[s.rx.read];
   s.rx.read = (s.rx.read + 1) & BUFFER_WRAP_MASK;
+  assert(s.rx.length > 0);
   --s.rx.length;
+
   //printf("rx data read: %02X, %u, %u, %u\n", data, s.rx.read, s.rx.write, s.rx.length);
   return data;
 }
@@ -73,8 +75,10 @@ void io_rc_rx_buffer_write(uint8_t data)
 {
   if (io_rc_rx_buffer_full())
   {
+    printf("rx buffer full %u\n", s.rx.length);
     return;
   }
+
 
   s.rx.buffer[s.rx.write] = data;
   s.rx.write = (s.rx.write + 1) & BUFFER_WRAP_MASK;
@@ -90,6 +94,7 @@ uint8_t* io_rc_rx_buffer_bytes_written(uint8_t size)
 
   tdv_rc_uart_rx_bytes.v.u32 += size;
 
+  assert(s.rx.write < sizeof(s.rx.buffer));
   return s.rx.buffer+s.rx.write;
 }
 
@@ -283,8 +288,8 @@ BEGIN_DEF_DV_ARRAY( tdv_rc_mapping )
   DEF_DV_ARRAY_ITEM(1, 1, rc_mapping_name, rc_mapping_desc, u8, Tdm_RW),
   DEF_DV_ARRAY_ITEM(2, 3, rc_mapping_name, rc_mapping_desc, u8, Tdm_RW),
   DEF_DV_ARRAY_ITEM(3, 2, rc_mapping_name, rc_mapping_desc, u8, Tdm_RW),
-  DEF_DV_ARRAY_ITEM(4, 4, rc_mapping_name, rc_mapping_desc, u8, Tdm_RW),
-  DEF_DV_ARRAY_ITEM(5, 5, rc_mapping_name, rc_mapping_desc, u8, Tdm_RW),
+  DEF_DV_ARRAY_ITEM(4, 5, rc_mapping_name, rc_mapping_desc, u8, Tdm_RW),
+  DEF_DV_ARRAY_ITEM(5, 4, rc_mapping_name, rc_mapping_desc, u8, Tdm_RW),
   DEF_DV_ARRAY_ITEM(6, 6, rc_mapping_name, rc_mapping_desc, u8, Tdm_RW),
   DEF_DV_ARRAY_ITEM(7, 7, rc_mapping_name, rc_mapping_desc, u8, Tdm_RW),
 END_DEF_DV_ARRAY();
